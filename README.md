@@ -36,7 +36,7 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 2.  Run the following command in your terminal:
 
     ```bash
-    curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
@@ -112,13 +112,37 @@ dafc "What are the steps to run this project locally?"
 
 The LLM response will be streamed to your terminal and saved completely in `response.md`.
 
-**2. View Context:**
+**2. View and Manage Context:**
 
-See exactly what context is being gathered and sent to the LLM (useful for debugging).
+See exactly what context is being gathered and sent to the LLM, save it, copy it, or watch for changes.
 
 ```bash
+# Print context to the console (default behavior)
 dafc context
+
+# Save context to the default file (context.txt)
+dafc context --save
+
+# Save context to a specific file
+dafc context --save my_project_context.md
+
+# Copy context directly to the clipboard
+dafc context --copy
+
+# Save context to context.txt AND copy it to the clipboard
+dafc context --save --copy
+
+# Save context to context.txt and watch for file changes, updating the file automatically
+# Press Ctrl+C to stop watching.
+dafc context --save --watch
+
+# Save context to a specific file and watch for changes
+dafc context --save specific_context.txt --watch
 ```
+
+*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.txt`.
+*   `--copy`: Copies the gathered context to the system clipboard.
+*   `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
 
 **3. Initialize Config Files:**
 

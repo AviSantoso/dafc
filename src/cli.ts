@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { Command } from "commander";
-import { writeFile } from "fs/promises";
-import { join } from "path";
+import { Command, Option } from "commander";
+import { writeFile, watch } from "fs/promises";
+import { join, resolve } from "path";
+import clipboard from "clipboardy";
 import { gatherContext } from "./context";
 import { queryLLM } from "./llm";
-import { createIgnoreFilter, readFileContent } from "./utils";
+import { createIgnoreFilter, readFileContent, debounce } from "./utils";
 import { config } from "./config";
-// Dynamically import package.json to get version
 import pkg from "../package.json";
 
 const program = new Command();
@@ -48,26 +48,108 @@ program
 
 program
   .command("context")
-  .description("Gather context and print it to stdout (what the LLM sees).")
-  .action(async () => {
-    console.log("Gathering context...");
+  .description("Gather context and print, save, copy, or watch it.")
+  .addOption(
+    new Option(
+      "-s, --save [outputFile]",
+      "Save context to a file (default: context.txt)"
+    ).argParser((value) => value || "context.txt") // Set default if flag exists but no value
+  )
+  .option(
+    "-w, --watch",
+    "Watch for file changes and update the saved context file (requires --save)"
+  )
+  .option("-c, --copy", "Copy the context to the clipboard")
+  .action(async (opts: { save?: string; watch?: boolean; copy?: boolean }) => {
     const rootDir = process.cwd();
-    try {
-      const ig = await createIgnoreFilter(rootDir);
-      const { context, files } = await gatherContext(rootDir, ig);
+    console.log("Gathering context...");
 
-      if (files.length === 0) {
-        console.warn(
-          "Warning: No files were included in the context. Check your include patterns and ignore files."
-        );
-      } else {
-        console.log("\n--- START CONTEXT ---");
-        console.log(context);
-        console.log("--- END CONTEXT ---");
+    const performGatherAndOutput = async (
+      isInitialRun = true
+    ): Promise<string | null> => {
+      try {
+        const ig = await createIgnoreFilter(rootDir); // Recreate filter in case ignores change
+        const { context, files } = await gatherContext(rootDir, ig);
+
+        if (files.length === 0 && isInitialRun) {
+          console.warn(
+            "Warning: No files were included in the context. Check your include patterns and ignore files."
+          );
+        }
+
+        // Handle output based on flags
+        if (opts.save) {
+          const savePath = resolve(rootDir, opts.save);
+          await writeFile(savePath, context, "utf-8");
+          if (isInitialRun || !opts.watch) {
+            console.log(`✅ Context saved to ${savePath}`);
+          } else {
+            console.log(
+              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`
+            );
+          }
+        }
+
+        // Copy only on initial run or if not watching
+        if (opts.copy && (isInitialRun || !opts.watch)) {
+          await clipboard.write(context);
+          console.log("✅ Context copied to clipboard.");
+        }
+
+        // Print to stdout only if no other action is taken or if not watching
+        if (!opts.save && !opts.copy && !opts.watch) {
+          console.log("\n--- START CONTEXT ---");
+          console.log(context);
+          console.log("--- END CONTEXT ---");
+        }
+        return context; // Return context for potential reuse
+      } catch (error: any) {
+        console.error(`\n❌ Error gathering context: ${error.message}`);
+        if (!opts.watch) process.exit(1); // Exit if not watching
+        return null; // Indicate error in watch mode
       }
-    } catch (error: any) {
-      console.error(`\n❌ Error gathering context: ${error.message}`);
-      process.exit(1);
+    };
+
+    // Initial context generation and output
+    await performGatherAndOutput(true);
+
+    // Handle watching if requested
+    if (opts.watch) {
+      if (!opts.save) {
+        console.error(
+          "❌ Error: --watch requires --save to specify an output file."
+        );
+        process.exit(1);
+      }
+
+      console.log(`\n👀 Watching for file changes in ${rootDir}...`);
+      console.log("   Press Ctrl+C to stop.");
+
+      const debouncedRegenerate = debounce(
+        () => performGatherAndOutput(false),
+        500
+      ); // Debounce regeneration
+
+      try {
+        const watcher = watch(rootDir, { recursive: true });
+        for await (const event of watcher) {
+          // Basic check: ignore changes to the output file itself and common noisy dirs
+          const eventPath = resolve(rootDir, event.filename || "");
+          const savePath = resolve(rootDir, opts.save);
+          if (
+            eventPath === savePath ||
+            event.filename?.startsWith(".git") ||
+            event.filename?.includes("node_modules")
+          ) {
+            continue;
+          }
+          // console.log(`Detected ${event.eventType} in ${event.filename}`); // Debug logging
+          debouncedRegenerate();
+        }
+      } catch (error: any) {
+        console.error(`\n❌ File watcher error: ${error.message}`);
+        process.exit(1);
+      }
     }
   });
 
@@ -92,6 +174,9 @@ program
 
 # Ignore the response file itself
 ${config.RESPONSE_FILE}
+
+# Ignore default context output file
+context.txt
 `;
 
     const defaultDafcr = `[START SYSTEM PROMPT]
@@ -166,13 +251,14 @@ if (
   args[0] !== "-h" &&
   args[0] !== "--help" &&
   args[0] !== "-v" &&
-  args[0] !== "--version"
+  args[0] !== "--version" &&
+  !args[0].startsWith("-") // Ensure it's not an option for the default command
 ) {
   // Prepend 'ask' to the arguments to trigger the ask command
   process.argv.splice(2, 0, "ask");
 } else if (args.length === 0) {
   // Show help if no arguments are given
-  process.argv.push("--help");
+  program.help(); // Use commander's help display
 }
 
 program.parse(process.argv);

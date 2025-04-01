@@ -55,12 +55,21 @@ export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
   const normalizedPath = relativePath.startsWith("/")
     ? relativePath.substring(1)
     : relativePath;
-  const isIgnored = ig.ignores(normalizedPath);
+  // Also test the path with a leading slash for directory patterns like /node_modules/
+  const isIgnored =
+    ig.ignores(normalizedPath) || ig.ignores(`/${normalizedPath}`);
   // if (isIgnored) console.debug(`Ignoring: ${normalizedPath}`);
   return !isIgnored;
 }
 
 export function isAllowedExtension(filename: string): boolean {
+  // Ignore files starting with '.' unless explicitly allowed (like .env, .rc)
+  if (
+    filename.startsWith(".") &&
+    !config.DEFAULT_INCLUDE_PATTERNS.some((pattern) => pattern.test(filename))
+  ) {
+    return false;
+  }
   return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
     pattern.test(filename)
   );
@@ -73,4 +82,21 @@ export function formatBytes(bytes: number, decimals = 2): string {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+// Simple debounce function
+export function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => {
+      func(...args);
+      timeout = null; // Clear timeout after execution
+    }, wait);
+  };
 }
