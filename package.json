@@ -1,11 +1,53 @@
 {
-  "name": "dafc",
-  "module": "index.ts",
+  "name": "dafc-cli",
+  "version": "0.1.0",
+  "description": "Dumb as Fuck Coding Tool - Leverage large context LLMs by sending (small) codebases.",
   "type": "module",
+  "bin": {
+    "dafc": "./dafc"
+  },
+  "scripts": {
+    "build": "bun build ./src/cli.ts --compile --outfile dafc",
+    "dev": "bun run ./src/cli.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "ignore": "^5.3.1",
+    "openai": "^4.52.7"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^20.14.10"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "files": [
+    "dafc",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "llm",
+    "ai",
+    "cli",
+    "codegen",
+    "context",
+    "gemini",
+    "openai",
+    "developer-tool"
+  ],
+  "homepage": "https://github.com/AviSantoso/dafc",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AviSantoso/dafc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AviSantoso/dafc/issues"
+  },
+  "author": "Avi Santoso",
+  "license": "MIT"
 }

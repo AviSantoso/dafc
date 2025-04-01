@@ -1,0 +1,80 @@
+name: Release DAFC CLI
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger on version tags like v0.1.0
+
+jobs:
+  build-release:
+    name: Build and Release Binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # Define build targets
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            asset_name: dafc-linux-x64
+          - os: macos-latest # Usually defaults to x64 on GitHub Actions runners
+            target: macos-x64
+            asset_name: dafc-macos-x64
+          # Add macos-arm64 if you have runners or cross-compilation setup
+          # - os: macos-latest # Requires specific runner or cross-compile setup
+          #   target: macos-arm64
+          #   asset_name: dafc-macos-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest # Or pin to a specific version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build executable for ${{ matrix.target }}
+        run: bun build ./src/cli.ts --compile --outfile ${{ matrix.asset_name }} --target ${{ matrix.target }}
+
+      - name: Check if executable exists
+        run: ls -l ${{ matrix.asset_name }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }} # Use the tag that triggered the workflow
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Release of DAFC CLI version ${{ github.ref_name }}.
+            Download the appropriate binary for your system below.
+            See README.md for installation and usage instructions.
+          draft: false
+          prerelease: contains(github.ref_name, '-') # Mark as pre-release if tag contains '-' (e.g., v0.1.0-beta)
+
+      - name: Upload Release Asset (${{ matrix.asset_name }})
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ matrix.asset_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream
+
+      # Optional: Upload install script (might need adjustment to download correct binary)
+      # - name: Upload Install Script
+      #   if: matrix.os == 'ubuntu-latest' # Only upload once
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./install.sh
+      #     asset_name: install.sh
+      #     asset_content_type: application/x-shellscript
