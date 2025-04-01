@@ -42,6 +42,25 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 2.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
 3.  Verify installation: `dafc --version`
 
+### Using NPM/Yarn/Bun Package Managers
+
+1. Install globally with your preferred package manager:
+   ```bash
+   # Using npm
+   npm install -g @wagn/dafc
+   
+   # Using yarn
+   yarn global add @wagn/dafc
+   
+   # Using bun
+   bun install -g @wagn/dafc
+   ```
+
+2. Verify installation:
+   ```bash
+   dafc --version
+   ```
+
 ### Manual Installation / From Source
 
 1.  Ensure **Bun** and **Git** are installed.
