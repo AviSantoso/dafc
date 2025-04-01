@@ -27,9 +27,17 @@ program
 program
   .command("ask <prompt>")
   .description("Ask the LLM a question using the current directory's context.")
-  .action(async (prompt: string) => {
+  .option("--debug", "Show debug information including config")
+  .action(async (prompt: string, opts: { debug?: boolean }) => {
     console.log("DAFC - Dumb as Fuck Coder");
     console.log("--------------------------");
+
+    if (opts.debug) {
+      console.log("\nConfig:");
+      console.log(JSON.stringify(config, null, 2));
+      console.log("--------------------------\n");
+    }
+
     const rootDir = process.cwd();
     try {
       const ig = await createIgnoreFilter(rootDir);
