@@ -3,38 +3,49 @@ import OpenAI from "openai";
 import { config } from "./config";
 import { sleep } from "./utils";
 
+// Ensure API key is present before initializing OpenAI client
+if (!config.OPENAI_API_KEY) {
+  console.error("FATAL: OPENAI_API_KEY is not configured. Exiting.");
+  process.exit(1);
+}
+
 const openai = new OpenAI({
   baseURL: config.API_BASE_URL,
-  apiKey: config.OPENROUTER_API_KEY,
+  apiKey: config.OPENAI_API_KEY, // Use the configured API key
   defaultHeaders: {
-    "HTTP-Referer": "https://github.com/AviSantoso/dafc",
-    "X-Title": "DAFC CLI",
+    // Add headers recommended by OpenRouter
+    "HTTP-Referer": "https://github.com/AviSantoso/dafc", // Replace with your app URL or repo
+    "X-Title": "DAFC CLI", // Replace with your app name
   },
 });
 
 export async function queryLLM(
   context: string,
   userPrompt: string,
-  systemPrompt: string | null
+  systemPrompt: string | null // Allow system prompt to be null
 ): Promise<void> {
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
+  // Add system prompt if provided
   if (systemPrompt) {
     messages.push({ role: "system", content: systemPrompt });
   }
 
-  // Combine context and user prompt
-  const combinedContent = context
-    ? `Project Context:\n${context}\n\nUser Request:\n${userPrompt}`
-    : userPrompt;
+  // Combine context and user prompt for the user message
+  // Ensure context isn't accidentally empty causing double newlines
+  const userMessageContent = context
+    ? `Project Context:\n${context}\n\n---\n\nUser Request:\n${userPrompt}`
+    : `User Request:\n${userPrompt}`;
 
-  messages.push({ role: "user", content: combinedContent });
+  messages.push({ role: "user", content: userMessageContent });
 
   let attempt = 0;
   while (attempt < config.MAX_RETRIES) {
     try {
       console.log(
-        `\nSending request to ${config.MODEL_NAME}${
+        `\nSending request to model '${config.MODEL_NAME}' via ${
+          config.API_BASE_URL
+        }${
           attempt > 0 ? ` (attempt ${attempt + 1}/${config.MAX_RETRIES})` : ""
         }...`
       );
@@ -67,37 +78,59 @@ export async function queryLLM(
     } catch (error: any) {
       console.error("\n❌ LLM API Error:");
 
-      if (error.response) {
-        console.error(`Status: ${error.response.status}`);
-        const errorMsg = error.response.data?.error?.message || error.message;
-        console.error(`Message: ${errorMsg}`);
+      // Check for OpenAI specific error structure first
+      if (error instanceof OpenAI.APIError) {
+        console.error(`Status: ${error.status}`);
+        console.error(`Type: ${error.type}`);
+        console.error(`Code: ${error.code}`);
+        console.error(`Message: ${error.message}`);
 
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
           console.error(
-            "1. Your OPENROUTER_API_KEY in .env or environment is correct."
+            "1. Your OPENAI_API_KEY in .env or environment is correct for the service at PROXY_URL."
           );
-          console.error("2. You have sufficient credits on OpenRouter.");
-          console.error("3. The model name is correct and available.");
+          console.error("2. You have sufficient credits/permissions.");
+          console.error(
+            "3. The model name is correct and available via the endpoint."
+          );
           process.exit(1); // Don't retry auth errors
         }
-        if (error.response.status === 402) {
-          console.error("\nPayment Required. Check your OpenRouter credits.");
+        if (error.status === 402) {
+          console.error(
+            "\nPayment Required. Check your account credits/billing."
+          );
           process.exit(1);
         }
-        if (error.response.status === 429) {
-          console.error("\nRate Limited. Please wait before trying again.");
+        if (error.status === 429) {
+          console.error(
+            "\nRate Limited or Quota Exceeded. Please wait before trying again or check your limits."
+          );
           // Exponential backoff will handle retry delay
+        }
+        if (error.status === 400 && error.code === "context_length_exceeded") {
+          console.error(
+            "\nContext Length Exceeded. The model cannot handle the amount of context provided."
+          );
+          console.error(
+            "Try excluding more files/directories or simplifying your request."
+          );
+          process.exit(1); // Don't retry context length errors
         }
       } else if (
         error.code === "ENOTFOUND" ||
         error.message.includes("fetch failed")
       ) {
+        // Handle generic network errors
         console.error(
-          "Network error - Could not reach API endpoint. Check connection and API_BASE_URL."
+          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and PROXY_URL.`
         );
       } else {
-        console.error(error.message);
+        // Handle other unexpected errors
+        console.error(`An unexpected error occurred: ${error.message}`);
+        if (error.stack) {
+          console.error(error.stack);
+        }
       }
 
       attempt++;

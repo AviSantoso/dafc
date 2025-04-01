@@ -1,11 +1,16 @@
 #!/usr/bin/env bun
 import { Command, Option } from "commander";
 import { writeFile, watch } from "fs/promises";
-import { join, resolve } from "path";
+import { join, relative, resolve } from "path";
 import clipboard from "clipboardy";
-import { gatherContext } from "./context";
+import { gatherContext, ContextTooLargeError } from "./context"; // Import error type
 import { queryLLM } from "./llm";
-import { createIgnoreFilter, readFileContent, debounce } from "./utils";
+import {
+  createIgnoreFilter,
+  readFileContent,
+  debounce,
+  isAllowedPath,
+} from "./utils";
 import { config } from "./config";
 // Dynamically import package.json to get version
 import pkg from "../package.json";
@@ -32,13 +37,19 @@ program
 
       if (files.length === 0) {
         console.warn(
-          "Warning: No files were included in the context. Check your include patterns and ignore files."
+          "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore)."
         );
-        // Optionally exit or proceed with only prompt + rules
+        // Proceeding with only prompt + rules might still be useful
       }
 
       await queryLLM(context, prompt, rules);
     } catch (error: any) {
+      // Handle specific context too large error
+      if (error instanceof ContextTooLargeError) {
+        // Message already logged by gatherContext
+        process.exit(1);
+      }
+      // Handle other errors
       console.error(`\n❌ An unexpected error occurred: ${error.message}`);
       if (error.stack) {
         console.error(error.stack);
@@ -74,7 +85,7 @@ program
 
         if (files.length === 0 && isInitialRun) {
           console.warn(
-            "Warning: No files were included in the context. Check your include patterns and ignore files."
+            "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore)."
           );
         }
 
@@ -105,6 +116,13 @@ program
         }
         return context; // Return context for potential reuse
       } catch (error: any) {
+        // Handle specific context too large error
+        if (error instanceof ContextTooLargeError) {
+          // Message already logged by gatherContext
+          if (!opts.watch) process.exit(1); // Exit if not watching
+          return null; // Indicate error in watch mode
+        }
+        // Handle other errors
         console.error(`\n❌ Error gathering context: ${error.message}`);
         if (!opts.watch) process.exit(1); // Exit if not watching
         return null; // Indicate error in watch mode
@@ -132,18 +150,26 @@ program
       ); // Debounce regeneration
 
       try {
+        const igForWatch = await createIgnoreFilter(rootDir); // Initial ignore filter for watcher
         const watcher = watch(rootDir, { recursive: true });
         for await (const event of watcher) {
-          // Basic check: ignore changes to the output file itself and common noisy dirs
-          const eventPath = resolve(rootDir, event.filename || "");
+          const eventFilename = event.filename || "";
+          const eventPath = resolve(rootDir, eventFilename);
           const savePath = resolve(rootDir, opts.save);
-          if (
-            eventPath === savePath ||
-            event.filename?.startsWith(".git") ||
-            event.filename?.includes("node_modules")
-          ) {
+
+          // Basic check: ignore changes to the output file itself
+          if (eventPath === savePath) {
             continue;
           }
+
+          // More robust check using the ignore filter
+          // Need relative path for ignore check
+          const relativeEventPath = relative(rootDir, eventPath);
+          if (!isAllowedPath(relativeEventPath, igForWatch)) {
+            // console.log(`Ignoring change in ignored path: ${relativeEventPath}`); // Debug
+            continue;
+          }
+
           // console.log(`Detected ${event.eventType} in ${event.filename}`); // Debug logging
           debouncedRegenerate();
         }
@@ -172,12 +198,19 @@ program
 # data/
 # *.log
 # temp/
+# vendor/
+# __pycache__/
+# *.lock
+# *.log
 
 # Ignore the response file itself
 ${config.RESPONSE_FILE}
 
 # Ignore default context output file
 context.md
+
+# Ignore environment file
+.env
 `;
 
     const defaultDafcr = `[START SYSTEM PROMPT]
@@ -189,14 +222,14 @@ If generating code, ensure it matches the project's style and conventions.
 If the request is unclear, ask clarifying questions.
 Think step-by-step before generating the final response.
 Output the response in Markdown format. For code blocks, specify the language.
+Adhere to the DAFC principles: keep code simple, modular, and within limits (e.g., <500 lines/file if possible).
 [END SYSTEM PROMPT]
 
 [START INSTRUCTIONS]
-- Adhere to the DAFC principles: keep code simple, modular, and within limits (e.g., <500 lines/file if possible).
 - Focus on minimum viable functionality.
 - Ensure code is clear, readable, and self-documenting.
 - If refactoring is needed (e.g., splitting large files), provide clear instructions and the refactored code.
-- Return full code for modified or new files in separate Markdown code blocks like the example below.
+- Return full code for modified or new files in separate Markdown code blocks like the example below. Do not skip lines or sections.
 [END INSTRUCTIONS]
 
 [EXAMPLE OUTPUT FILE]

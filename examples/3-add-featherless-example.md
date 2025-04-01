@@ -31,7 +31,7 @@ dotenv.config({ override: true }); // Load default .env if specific one not foun
 export const config = {
   // LLM Settings - Uses OpenAI standard env variables where possible
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || "", // Use standard OpenAI key name
-  MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-1.5-pro-latest", // Default to large context model on OpenRouter
+  MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Default to large context model on OpenRouter
   API_BASE_URL: process.env.PROXY_URL || "https://openrouter.ai/api/v1", // Default to OpenRouter
   TEMPERATURE: 0.3,
   MAX_RETRIES: 5,

@@ -101,7 +101,7 @@ dotenv.config({ override: true }); // Load default .env if specific one not foun
 export const config = {
   // LLM Settings
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
-  MODEL_NAME: process.env.DAFC_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
+  MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
   API_BASE_URL: "https://openrouter.ai/api/v1",
   API_REFERER: process.env.DAFC_REFERER || "https://github.com/your-repo/dafc-cli", // CHANGE THIS
   API_TITLE: "DAFC CLI",
@@ -946,7 +946,7 @@ Download the pre-compiled binary for your system from the [Releases Page](https:
         OPENROUTER_API_KEY='your-key-here'
 
         # Optional: Override the default model
-        # DAFC_MODEL='anthropic/claude-3.5-sonnet'
+        # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
         ```
     *   Alternatively, export it in your shell: `export OPENROUTER_API_KEY='your-key-here'`
 
@@ -1035,7 +1035,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     # Copy this file to .env and fill in your API key
     OPENROUTER_API_KEY='your-openrouter-api-key-here'
     # Optional: Specify a different model compatible with OpenRouter API
-    # DAFC_MODEL='google/gemini-flash-1.5'
+    # OPENAI_MODEL='google/gemini-flash-1.5'
     ```
 *   Add `.env` to your main `.gitignore` file.
 *   Test the commands: `bun run src/cli.ts --version`, `bun run src/cli.ts init`, `bun run src/cli.ts context`, `bun run src/cli.ts ask "hello"`

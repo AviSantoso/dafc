@@ -52,10 +52,10 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
 export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
   try {
-    const normalizedPath = relativePath.startsWith("/")
-      ? relativePath.substring(1)
-      : relativePath;
+    // Normalize path for ignore matching (remove leading slash if present)
+    const normalizedPath = relativePath.replace(/^[\/\\]/, "");
     const isIgnored = ig.ignores(normalizedPath);
+    // console.debug(`Path: ${normalizedPath}, Ignored: ${isIgnored}`); // Debugging
     return !isIgnored;
   } catch (error) {
     console.warn(`Error checking path ${relativePath}: ${error}`);
@@ -64,16 +64,19 @@ export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
 }
 
 export function isAllowedExtension(filename: string): boolean {
-  // Ignore files starting with '.' unless explicitly allowed (like .env, .rc)
+  // Ignore files starting with '.' unless explicitly allowed (like .env.example, .rc files)
   if (
     filename.startsWith(".") &&
     !config.DEFAULT_INCLUDE_PATTERNS.some((pattern) => pattern.test(filename))
   ) {
+    // console.debug(`Skipping hidden file: ${filename}`); // Debugging
     return false;
   }
-  return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
+  const allowed = config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
     pattern.test(filename)
   );
+  // if (!allowed) console.debug(`Skipping disallowed extension: ${filename}`); // Debugging
+  return allowed;
 }
 
 export function formatBytes(bytes: number, decimals = 2): string {
@@ -82,7 +85,13 @@ export function formatBytes(bytes: number, decimals = 2): string {
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  // Handle potential edge case where i might be out of bounds for sizes array
+  const sizeIndex = Math.min(i, sizes.length - 1);
+  return (
+    parseFloat((bytes / Math.pow(k, sizeIndex)).toFixed(dm)) +
+    " " +
+    sizes[sizeIndex]
+  );
 }
 
 // Simple debounce function
@@ -100,4 +109,15 @@ export function debounce<T extends (...args: any[]) => void>(
       timeout = null; // Clear timeout after execution
     }, wait);
   };
+}
+
+/**
+ * Estimates the number of tokens in a given text.
+ * Uses a simple character-based approximation.
+ * @param text The text to estimate tokens for.
+ * @returns The estimated number of tokens.
+ */
+export function estimateTokens(text: string): number {
+  if (!text) return 0;
+  return Math.ceil(text.length / config.APPROX_CHARS_PER_TOKEN);
 }

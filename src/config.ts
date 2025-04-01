@@ -5,15 +5,19 @@ dotenv.config({ path: process.cwd() + "/.env", override: true });
 dotenv.config({ override: true }); // Load default .env if specific one not found
 
 export const config = {
-  // LLM Settings
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
-  MODEL_NAME: process.env.DAFC_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
-  API_BASE_URL: process.env.DAFC_API_BASE_URL || "https://openrouter.ai/api/v1",
+  // LLM Settings - Uses OpenAI standard env variables where possible
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "", // Use standard OpenAI key name
+  MODEL_NAME:
+    process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Default to large context model on OpenRouter
+  API_BASE_URL: process.env.PROXY_URL || "https://openrouter.ai/api/v1", // Default to OpenRouter
   TEMPERATURE: 0.3,
   MAX_RETRIES: 5,
   BASE_DELAY: 1000, // ms
 
-  // File Handling
+  // Context Handling
+  MAX_CONTEXT_TOKENS: 900000, // Set a safety margin below 1M tokens for Gemini 1.5 Pro
+  // Simple approximation: 1 token ~= 4 chars. Adjust if needed.
+  APPROX_CHARS_PER_TOKEN: 4,
   RESPONSE_FILE: "response.md",
   DAFC_IGNORE_FILE: ".dafcignore",
   DAFC_RULES_FILE: ".dafcr",
@@ -26,8 +30,19 @@ export const config = {
     ".next",
     "out",
     "coverage",
+    "vendor", // Common dependency folder for other languages
+    "__pycache__",
+    ".venv",
+    ".env", // Exclude virtual envs
   ]),
-  DEFAULT_IGNORE_FILES: new Set([".DS_Store", "response.md", ".env"]),
+  DEFAULT_IGNORE_FILES: new Set([
+    ".DS_Store",
+    "response.md",
+    "context.md", // Default context output file
+    ".env", // Exclude environment file itself
+    "*.lock", // Exclude lock files (package-lock.json, yarn.lock, etc.)
+    "*.log", // Exclude log files
+  ]),
   // Add file extensions you want to include by default
   DEFAULT_INCLUDE_PATTERNS: [
     /\.ts$/,
@@ -56,9 +71,9 @@ export const config = {
     /\.sh$/,
     /\.bash$/,
     /Makefile$/,
-    /^\.?env/,
+    /^\.?env/, // Include .env.example etc. but DEFAULT_IGNORE_FILES excludes .env
     /^\.?config/,
-    /^\.?rc$/, // Config files like .env, .eslintrc
+    /^\.?rc$/, // Config files like .eslintrc
     /package\.json$/,
     /composer\.json$/,
     /Gemfile$/,
@@ -77,12 +92,20 @@ export const config = {
 };
 
 // Validate essential config
-if (!config.OPENROUTER_API_KEY) {
-  console.error("Error: OPENROUTER_API_KEY environment variable not set.");
-  console.error("1. Get an API key from https://openrouter.ai/keys");
+if (!config.OPENAI_API_KEY) {
+  console.error("Error: OPENAI_API_KEY environment variable not set.");
+  console.error(
+    "This tool requires an API key for an OpenAI-compatible service."
+  );
+  console.error(
+    "1. Obtain an API key (e.g., from OpenRouter, OpenAI, Featherless)."
+  );
   console.error("2. Create a .env file in your project root with:");
-  console.error("   OPENROUTER_API_KEY='your-key-here'");
+  console.error("   OPENAI_API_KEY='your-key-here'");
+  console.error("   # Optional: Override model and API endpoint");
+  console.error("   # OPENAI_MODEL='openai/gpt-4o'");
+  console.error("   # PROXY_URL='https://api.openai.com/v1'");
   console.error("3. Or, set the environment variable directly:");
-  console.error("   export OPENROUTER_API_KEY='your-key-here'");
+  console.error("   export OPENAI_API_KEY='your-key-here'");
   process.exit(1);
 }
