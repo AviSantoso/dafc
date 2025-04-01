@@ -128,7 +128,7 @@ dotenv.config({ debug: true, override: true });
 // Configuration
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL_NAME = "google/gemini-2.5-pro-exp-03-25:free";
-const CONTEXT_FILE = "context.txt";
+const CONTEXT_FILE = "context.md";
 const RESPONSE_FILE = "response.md";
 const MAX_RETRIES = 5;
 const BASE_DELAY = 1000; // 1 second
@@ -311,7 +311,7 @@ import { watch } from "fs";
 import { readdir, readFile, writeFile } from "fs/promises";
 import { join, relative } from "path";
 
-const OUTPUT_FILE = "context.txt";
+const OUTPUT_FILE = "context.md";
 
 async function generateContext() {
   const patterns = [/\.ts$/, /\.tsx$/, /\.md$/, /\.html$/, /\.css$/, /\.json$/];
@@ -335,7 +335,7 @@ async function generateContext() {
     ".gitignore",
     ".DS_Store",
     ".dafcr",
-    "context.txt",
+    "context.md",
     "response.txt",
     OUTPUT_FILE,
   ]);

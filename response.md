@@ -71,8 +71,8 @@ program
   .addOption(
     new Option(
       "-s, --save [outputFile]",
-      "Save context to a file (default: context.txt)"
-    ).argParser((value) => value || "context.txt") // Set default if flag exists but no value
+      "Save context to a file (default: context.md)"
+    ).argParser((value) => value || "context.md") // Set default if flag exists but no value
   )
   .option(
     "-w, --watch",
@@ -195,7 +195,7 @@ program
 ${config.RESPONSE_FILE}
 
 # Ignore default context output file
-context.txt
+context.md
 `;
 
     const defaultDafcr = `[START SYSTEM PROMPT]
@@ -462,7 +462,7 @@ See exactly what context is being gathered and sent to the LLM, save it, copy it
 # Print context to the console (default behavior)
 dafc context
 
-# Save context to the default file (context.txt)
+# Save context to the default file (context.md)
 dafc context --save
 
 # Save context to a specific file
@@ -471,10 +471,10 @@ dafc context --save my_project_context.md
 # Copy context directly to the clipboard
 dafc context --copy
 
-# Save context to context.txt AND copy it to the clipboard
+# Save context to context.md AND copy it to the clipboard
 dafc context --save --copy
 
-# Save context to context.txt and watch for file changes, updating the file automatically
+# Save context to context.md and watch for file changes, updating the file automatically
 # Press Ctrl+C to stop watching.
 dafc context --save --watch
 
@@ -482,7 +482,7 @@ dafc context --save --watch
 dafc context --save specific_context.txt --watch
 ```
 
-*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.txt`.
+*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.md`.
 *   `--copy`: Copies the gathered context to the system clipboard.
 *   `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
 

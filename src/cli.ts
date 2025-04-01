@@ -7,6 +7,7 @@ import { gatherContext } from "./context";
 import { queryLLM } from "./llm";
 import { createIgnoreFilter, readFileContent, debounce } from "./utils";
 import { config } from "./config";
+// Dynamically import package.json to get version
 import pkg from "../package.json";
 
 const program = new Command();
@@ -52,8 +53,8 @@ program
   .addOption(
     new Option(
       "-s, --save [outputFile]",
-      "Save context to a file (default: context.txt)"
-    ).argParser((value) => value || "context.txt") // Set default if flag exists but no value
+      "Save context to a file (default: context.md)"
+    ).argParser((value) => value || "context.md") // Set default if flag exists but no value
   )
   .option(
     "-w, --watch",
@@ -176,7 +177,7 @@ program
 ${config.RESPONSE_FILE}
 
 # Ignore default context output file
-context.txt
+context.md
 `;
 
     const defaultDafcr = `[START SYSTEM PROMPT]

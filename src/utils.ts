@@ -51,15 +51,16 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 }
 
 export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
-  // Normalize path for ignore matching (relative, no leading slash)
-  const normalizedPath = relativePath.startsWith("/")
-    ? relativePath.substring(1)
-    : relativePath;
-  // Also test the path with a leading slash for directory patterns like /node_modules/
-  const isIgnored =
-    ig.ignores(normalizedPath) || ig.ignores(`/${normalizedPath}`);
-  // if (isIgnored) console.debug(`Ignoring: ${normalizedPath}`);
-  return !isIgnored;
+  try {
+    const normalizedPath = relativePath.startsWith("/")
+      ? relativePath.substring(1)
+      : relativePath;
+    const isIgnored = ig.ignores(normalizedPath);
+    return !isIgnored;
+  } catch (error) {
+    console.warn(`Error checking path ${relativePath}: ${error}`);
+    return false;
+  }
 }
 
 export function isAllowedExtension(filename: string): boolean {

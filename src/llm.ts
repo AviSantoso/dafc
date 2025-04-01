@@ -6,10 +6,6 @@ import { sleep } from "./utils";
 const openai = new OpenAI({
   baseURL: config.API_BASE_URL,
   apiKey: config.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": config.API_REFERER,
-    "X-Title": config.API_TITLE,
-  },
 });
 
 export async function queryLLM(
@@ -108,7 +104,7 @@ export async function queryLLM(
         process.exit(1);
       }
 
-      const delay = config.BASE_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
+      const delay = config.BASE_DELAY * Math.pow(2, attempt); // Exponential backoff
       console.log(`\nRetrying in ${delay / 1000} seconds...`);
       await sleep(delay);
     }

@@ -6,13 +6,15 @@ dotenv.config({ override: true }); // Load default .env if specific one not foun
 
 export const config = {
   // LLM Settings
-  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
+  OPENROUTER_API_KEY:
+    process.env.OPENROUTER_API_KEY ||
+    (() => {
+      throw new Error("OPENROUTER_API_KEY is not set");
+    })(),
   MODEL_NAME: process.env.DAFC_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
-  API_BASE_URL: "https://openrouter.ai/api/v1",
-  API_REFERER: process.env.DAFC_REFERER || "https://github.com/AviSantoso/dafc",
-  API_TITLE: "DAFC CLI",
+  API_BASE_URL: process.env.DAFC_API_BASE_URL || "https://openrouter.ai/api/v1",
   TEMPERATURE: 0.3,
-  MAX_RETRIES: 3,
+  MAX_RETRIES: 5,
   BASE_DELAY: 1000, // ms
 
   // File Handling
@@ -29,7 +31,7 @@ export const config = {
     "out",
     "coverage",
   ]),
-  DEFAULT_IGNORE_FILES: new Set([".DS_Store", "response.md", ".env"]), // Add context.txt if you keep it
+  DEFAULT_IGNORE_FILES: new Set([".DS_Store", "response.md", ".env"]),
   // Add file extensions you want to include by default
   DEFAULT_INCLUDE_PATTERNS: [
     /\.ts$/,

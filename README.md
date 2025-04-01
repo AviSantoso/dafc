@@ -1,21 +1,18 @@
 # DAFC (The Fuck?) CLI - Dumb as Fuck Coding Tool
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Release](https://img.shields.io/github/v/release/AviSantoso/dafc)](https://github.com/AviSantoso/dafc/releases/latest)
 
 **DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 2.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
 **Read the full philosophy and background in the [introductory blog post](https://avisantoso.com/gemini-and-context-windows).**
 
----
-
 ## Core Idea: Constraints Unlock Full Context
 
 The "Dumb as Fuck Coding" methodology hinges on keeping projects simple and constrained:
 
-*   **Max ~500 Lines / File:** Keeps individual units manageable.
+*   **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
 *   **Max ~50 Files (Aim for ~10):** Limits overall scope.
-*   **Max ~5 Database Tables (Aim for 3, excluding users):** Simplifies the data model.
+*   **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
 
 By adhering to these rules, the *entire* relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context and interacting with the LLM.
 
@@ -65,10 +62,6 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
     mv ./dafc ~/.local/bin/
     # Ensure ~/.local/bin is in your PATH
     ```
-
-### From Releases
-
-Download the pre-compiled binary for your system from the [Releases Page](https://github.com/AviSantoso/dafc/releases/latest), make it executable (`chmod +x dafc-<os>-<arch>`), and move it into your PATH.
 
 ## Configuration
 
@@ -120,7 +113,7 @@ See exactly what context is being gathered and sent to the LLM, save it, copy it
 # Print context to the console (default behavior)
 dafc context
 
-# Save context to the default file (context.txt)
+# Save context to the default file (context.md)
 dafc context --save
 
 # Save context to a specific file
@@ -129,10 +122,10 @@ dafc context --save my_project_context.md
 # Copy context directly to the clipboard
 dafc context --copy
 
-# Save context to context.txt AND copy it to the clipboard
+# Save context to context.md AND copy it to the clipboard
 dafc context --save --copy
 
-# Save context to context.txt and watch for file changes, updating the file automatically
+# Save context to context.md and watch for file changes, updating the file automatically
 # Press Ctrl+C to stop watching.
 dafc context --save --watch
 
@@ -140,7 +133,7 @@ dafc context --save --watch
 dafc context --save specific_context.txt --watch
 ```
 
-*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.txt`.
+*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.md`.
 *   `--copy`: Copies the gathered context to the system clipboard.
 *   `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
 
@@ -154,7 +147,7 @@ dafc init
 
 ## How It Works
 
-1.  **`dafc ask "prompt"`:**
+**`dafc ask "prompt"`:**
     *   Reads `.gitignore` and `.dafcignore`.
     *   Scans the current directory recursively for allowed file types.
     *   Filters out ignored files/directories.
