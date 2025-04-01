@@ -1,5 +1,5 @@
 {
-  "name": "dafc-cli",
+  "name": "@wagn/dafc",
   "version": "0.1.4",
   "description": "Dumb as Fuck Coding Tool - Leverage large context LLMs by sending (small) codebases.",
   "type": "module",
