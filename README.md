@@ -177,18 +177,19 @@ dafc init
 
 ## How It Works
 
-**`dafc ask "prompt"`:**
-    *   Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `PROXY_URL`).
-    *   Reads `.gitignore` and `.dafcignore`.
-    *   Scans the current directory recursively for allowed file types.
-    *   Filters out ignored files/directories.
-    *   Reads file contents (skipping very large or empty files).
-    *   Estimates token count for each file and boilerplate text.
-    *   **Throws an error and aborts if `MAX_CONTEXT_TOKENS` is exceeded.**
-    *   Reads rules from `.dafcr` (if it exists).
-    *   Formats file contents and rules into a single context block.
-    *   Sends `[System Prompt from .dafcr (if any)] + [User Message (Context Block + User Prompt)]` to the configured LLM via the specified API endpoint.
-    *   Streams the response to `stdout` and saves the full response to `response.md`.
+**`dafc ask "prompt"`**
+
+* Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `PROXY_URL`)
+* Reads `.gitignore` and `.dafcignore`
+* Scans the current directory recursively for allowed file types
+* Filters out ignored files/directories
+* Reads file contents (skipping very large or empty files)
+* Estimates token count for each file and boilerplate text
+* **Throws an error and aborts if `MAX_CONTEXT_TOKENS` is exceeded**
+* Reads rules from `.dafcr` (if it exists)
+* Formats file contents and rules into a single context block
+* Sends `[System Prompt from .dafcr (if any)] + [User Message (Context Block + User Prompt)]` to the configured LLM via the specified API endpoint
+* Streams the response to `stdout` and saves the full response to `response.md`
 
 ## Contributing
 
