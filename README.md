@@ -86,6 +86,14 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # OPENAI_API_BASE='https://openrouter.ai/api/v1'
         ```
 
+        **Example for Google AI Studio:**
+        ```dotenv
+        # .env - Example for Google AI Studio
+        OPENAI_API_KEY="your-google-api-key-here"
+        OPENAI_API_BASE="https://generativelanguage.googleapis.com/v1beta/openai/"
+        OPENAI_MODEL="gemini-2.5-pro-exp-03-25" # Or other Google model
+        ```
+
         **Example for Featherless:**
         ```dotenv
         # .env - Example for Featherless
