@@ -33,10 +33,10 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 
 1.  Make sure you have **Bun** ([install instructions](https://bun.sh/docs/installation)) and **Git** installed.
 2.  Run the following command in your terminal. Installs to `/usr/local/bin` by default:
-    **NOTE:** USES SUDO
     ```bash
     curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
+    **NOTE:** USES SUDO
 
 1.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 2.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
