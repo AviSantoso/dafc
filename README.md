@@ -32,16 +32,15 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 ### Using the Install Script (Linux/macOS)
 
 1.  Make sure you have **Bun** ([install instructions](https://bun.sh/docs/installation)) and **Git** installed.
-2.  Run the following command in your terminal:
-   - Installs to `/usr/local/bin` by default
-   - **NOTE:** USES SUDO
+2.  Run the following command in your terminal. Installs to `/usr/local/bin` by default:
+    **NOTE:** USES SUDO
     ```bash
     curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
 
-4.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
-5.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
-6.  Verify installation: `dafc --version`
+1.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
+2.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
+3.  Verify installation: `dafc --version`
 
 ### Manual Installation / From Source
 
