@@ -36,12 +36,10 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 2.  Run the following command in your terminal:
 
     ```bash
-    # Installs to /usr/local/bin by default, may require sudo
-    curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | bash
-    # Or, if you prefer sudo explicitly:
-    # curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
+    # Installs to /usr/local/bin by default
+    # NOTE: USES SUDO
+    curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
-    *Note: The script attempts to install without `sudo` first if installing to `/usr/local/bin`, but might prompt if permissions require it.*
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 4.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
