@@ -6,6 +6,10 @@ import { sleep } from "./utils";
 const openai = new OpenAI({
   baseURL: config.API_BASE_URL,
   apiKey: config.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "https://github.com/AviSantoso/dafc",
+    "X-Title": "DAFC CLI",
+  },
 });
 
 export async function queryLLM(
