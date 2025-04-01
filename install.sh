@@ -132,7 +132,7 @@ if ! command_exists dafc; then
 fi
 
 echo ""
-echo "Remember to set your OPENROUTER_API_KEY environment variable!"
+echo "Remember to set your OPENAI_API_KEY environment variable!"
 echo "See README for details."
 echo ""
 
