@@ -1,7 +1,6 @@
 # DAFC (The Fuck?) CLI - Dumb as Fuck Coding Tool
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/npm/v/dafc-cli)](https://www.npmjs.com/package/dafc-cli) <!-- Assuming you publish to npm -->
 
 **DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 1.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
