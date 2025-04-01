@@ -15,7 +15,7 @@ export const config = {
   BASE_DELAY: 1000, // ms
 
   // Context Handling
-  MAX_CONTEXT_TOKENS: 900000, // Set a safety margin below 1M tokens for Gemini 1.5 Pro
+  MAX_CONTEXT_TOKENS: 900000, // Set a safety margin below 1M tokens for Gemini 2.5 Pro
   // Simple approximation: 1 token ~= 4 chars. Adjust if needed.
   APPROX_CHARS_PER_TOKEN: 4,
   RESPONSE_FILE: "response.md",
