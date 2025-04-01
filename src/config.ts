@@ -6,11 +6,7 @@ dotenv.config({ override: true }); // Load default .env if specific one not foun
 
 export const config = {
   // LLM Settings
-  OPENROUTER_API_KEY:
-    process.env.OPENROUTER_API_KEY ||
-    (() => {
-      throw new Error("OPENROUTER_API_KEY is not set");
-    })(),
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
   MODEL_NAME: process.env.DAFC_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
   API_BASE_URL: process.env.DAFC_API_BASE_URL || "https://openrouter.ai/api/v1",
   TEMPERATURE: 0.3,
