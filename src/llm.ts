@@ -88,7 +88,7 @@ export async function queryLLM(
         if (error.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
           console.error(
-            "1. Your OPENAI_API_KEY in .env or environment is correct for the service at PROXY_URL."
+            `1. Your OPENAI_API_KEY in .env or environment is correct for the service at ${config.API_BASE_URL}.`
           );
           console.error("2. You have sufficient credits/permissions.");
           console.error(
@@ -123,7 +123,7 @@ export async function queryLLM(
       ) {
         // Handle generic network errors
         console.error(
-          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and PROXY_URL.`
+          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and OPENAI_API_BASE.`
         );
       } else {
         // Handle other unexpected errors

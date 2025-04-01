@@ -85,7 +85,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
 
         # Override the API endpoint (defaults to OpenRouter)
-        # PROXY_URL='https://openrouter.ai/api/v1'
+        # OPENAI_API_BASE='https://openrouter.ai/api/v1'
         ```
 
         **Example for Featherless:**
@@ -93,7 +93,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # .env - Example for Featherless
         OPENAI_API_KEY='your-featherless-key-here'
         OPENAI_MODEL='openai/deepseek-ai/DeepSeek-V3-0324' # Or other model supported by Featherless
-        PROXY_URL='https://api.featherless.ai/v1'
+        OPENAI_API_BASE='https://api.featherless.ai/v1'
         ```
 
         **Example for OpenAI:**
@@ -101,7 +101,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # .env - Example for OpenAI
         OPENAI_API_KEY='your-openai-key-here'
         OPENAI_MODEL='gpt-4o' # Or other OpenAI model
-        PROXY_URL='https://api.openai.com/v1'
+        OPENAI_API_BASE='https://api.openai.com/v1'
         ```
 
     *   Alternatively, export the variables in your shell: `export OPENAI_API_KEY='your-key-here'` etc.
@@ -178,7 +178,7 @@ dafc init
 
 **`dafc ask "prompt"`**
 
-* Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `PROXY_URL`)
+* Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`)
 * Reads `.gitignore` and `.dafcignore`
 * Scans the current directory recursively for allowed file types
 * Filters out ignored files/directories

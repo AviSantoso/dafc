@@ -1,4 +1,4 @@
-Okay, I understand the requirements. You want to make the DAFC CLI more flexible regarding the LLM provider by using standard OpenAI-compatible environment variables (`OPENAI_API_KEY`, `OPENAI_MODEL`, `PROXY_URL`), add a maximum context limit check, update the default model, and update the documentation accordingly, including an example for using Featherless.
+Okay, I understand the requirements. You want to make the DAFC CLI more flexible regarding the LLM provider by using standard OpenAI-compatible environment variables (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`), add a maximum context limit check, update the default model, and update the documentation accordingly, including an example for using Featherless.
 
 Here are the instructions and the updated code for the necessary files:
 
@@ -32,7 +32,7 @@ export const config = {
   // LLM Settings - Uses OpenAI standard env variables where possible
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || "", // Use standard OpenAI key name
   MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-1.5-pro-latest", // Default to large context model on OpenRouter
-  API_BASE_URL: process.env.PROXY_URL || "https://openrouter.ai/api/v1", // Default to OpenRouter
+  API_BASE_URL: process.env.OPENAI_API_BASE || "https://openrouter.ai/api/v1", // Default to OpenRouter
   TEMPERATURE: 0.3,
   MAX_RETRIES: 5,
   BASE_DELAY: 1000, // ms
@@ -123,7 +123,7 @@ if (!config.OPENAI_API_KEY) {
   console.error("   OPENAI_API_KEY='your-key-here'");
   console.error("   # Optional: Override model and API endpoint");
   console.error("   # OPENAI_MODEL='openai/gpt-4o'");
-  console.error("   # PROXY_URL='https://api.openai.com/v1'");
+  console.error("   # OPENAI_API_BASE='https://api.openai.com/v1'");
   console.error("3. Or, set the environment variable directly:");
   console.error("   export OPENAI_API_KEY='your-key-here'");
   process.exit(1);
@@ -878,7 +878,7 @@ export async function queryLLM(
         if (error.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
           console.error(
-            "1. Your OPENAI_API_KEY in .env or environment is correct for the service at PROXY_URL."
+            "1. Your OPENAI_API_KEY in .env or environment is correct for the service at OPENAI_API_BASE."
           );
           console.error("2. You have sufficient credits/permissions.");
           console.error("3. The model name is correct and available via the endpoint.");
@@ -901,7 +901,7 @@ export async function queryLLM(
       } else if (error.code === "ENOTFOUND" || error.message.includes("fetch failed")) {
         // Handle generic network errors
         console.error(
-          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and PROXY_URL.`
+          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and OPENAI_API_BASE.`
         );
       } else {
         // Handle other unexpected errors
@@ -1019,7 +1019,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
 
         # Override the API endpoint (defaults to OpenRouter)
-        # PROXY_URL='https://openrouter.ai/api/v1'
+        # OPENAI_API_BASE='https://openrouter.ai/api/v1'
         ```
 
         **Example for Featherless:**
@@ -1027,7 +1027,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # .env - Example for Featherless
         OPENAI_API_KEY='your-featherless-key-here'
         OPENAI_MODEL='openai/deepseek-ai/DeepSeek-V3-0324' # Or other model supported by Featherless
-        PROXY_URL='https://api.featherless.ai/v1'
+        OPENAI_API_BASE='https://api.featherless.ai/v1'
         ```
 
         **Example for OpenAI:**
@@ -1035,7 +1035,7 @@ DAFC uses environment variables for configuration, typically loaded from a `.env
         # .env - Example for OpenAI
         OPENAI_API_KEY='your-openai-key-here'
         OPENAI_MODEL='gpt-4o' # Or other OpenAI model
-        PROXY_URL='https://api.openai.com/v1'
+        OPENAI_API_BASE='https://api.openai.com/v1'
         ```
 
     *   Alternatively, export the variables in your shell: `export OPENAI_API_KEY='your-key-here'` etc.
@@ -1111,7 +1111,7 @@ dafc init
 ## How It Works
 
 **`dafc ask "prompt"`:**
-    *   Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `PROXY_URL`).
+    *   Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`).
     *   Reads `.gitignore` and `.dafcignore`.
     *   Scans the current directory recursively for allowed file types.
     *   Filters out ignored files/directories.

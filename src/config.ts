@@ -9,7 +9,7 @@ export const config = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || "", // Use standard OpenAI key name
   MODEL_NAME:
     process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Default to large context model on OpenRouter
-  API_BASE_URL: process.env.PROXY_URL || "https://openrouter.ai/api/v1", // Default to OpenRouter
+  API_BASE_URL: process.env.OPENAI_API_BASE || "https://openrouter.ai/api/v1", // Default to OpenRouter
   TEMPERATURE: 0.3,
   MAX_RETRIES: 5,
   BASE_DELAY: 1000, // ms
@@ -104,7 +104,7 @@ if (!config.OPENAI_API_KEY) {
   console.error("   OPENAI_API_KEY='your-key-here'");
   console.error("   # Optional: Override model and API endpoint");
   console.error("   # OPENAI_MODEL='openai/gpt-4o'");
-  console.error("   # PROXY_URL='https://api.openai.com/v1'");
+  console.error("   # OPENAI_API_BASE='https://api.openai.com/v1'");
   console.error("3. Or, set the environment variable directly:");
   console.error("   export OPENAI_API_KEY='your-key-here'");
   process.exit(1);
