@@ -1,13 +1,10 @@
 import dotenv from "dotenv";
 import { readFileSync } from "fs";
 import { getGlobalConfigPath, getProjectConfigPath } from "./utils"; // Import path helpers
-
-// --- Configuration Constants ---
-const GLOBAL_CONFIG_FILE = "config.env";
-const PROJECT_CONFIG_FILE = ".env"; // Standard project env file
+import { GLOBAL_CONFIG_FILE, PROJECT_CONFIG_FILE } from "./constants";
 
 // --- Default Values ---
-const defaults = {
+export const defaultConfig = {
   OPENAI_API_KEY: "",
   OPENAI_MODEL: "google/gemini-2.5-pro-exp-03-25:free",
   OPENAI_API_BASE: "https://openrouter.ai/api/v1",
@@ -128,7 +125,7 @@ function loadConfig() {
 
   // 4. Merge configurations (Env > Project > Global > Defaults)
   const mergedConfig = {
-    ...defaults,
+    ...defaultConfig,
     ...globalConfig,
     ...projectConfig,
     ...envVars, // Environment variables override file configs
@@ -137,40 +134,40 @@ function loadConfig() {
       envVars.TEMPERATURE ||
         (projectConfig as any).TEMPERATURE ||
         (globalConfig as any).TEMPERATURE ||
-        String(defaults.TEMPERATURE)
+        String(defaultConfig.TEMPERATURE)
     ),
     MAX_RETRIES: parseInt(
       envVars.MAX_RETRIES ||
         (projectConfig as any).MAX_RETRIES ||
         (globalConfig as any).MAX_RETRIES ||
-        String(defaults.MAX_RETRIES),
+        String(defaultConfig.MAX_RETRIES),
       10
     ),
     BASE_DELAY: parseInt(
       envVars.BASE_DELAY ||
         (projectConfig as any).BASE_DELAY ||
         (globalConfig as any).BASE_DELAY ||
-        String(defaults.BASE_DELAY),
+        String(defaultConfig.BASE_DELAY),
       10
     ),
     MAX_CONTEXT_TOKENS: parseInt(
       envVars.MAX_CONTEXT_TOKENS ||
         (projectConfig as any).MAX_CONTEXT_TOKENS ||
         (globalConfig as any).MAX_CONTEXT_TOKENS ||
-        String(defaults.MAX_CONTEXT_TOKENS),
+        String(defaultConfig.MAX_CONTEXT_TOKENS),
       10
     ),
     MAX_FILE_SIZE_BYTES: parseInt(
       envVars.MAX_FILE_SIZE_BYTES ||
         (projectConfig as any).MAX_FILE_SIZE_BYTES ||
         (globalConfig as any).MAX_FILE_SIZE_BYTES ||
-        String(defaults.MAX_FILE_SIZE_BYTES),
+        String(defaultConfig.MAX_FILE_SIZE_BYTES),
       10
     ),
     // Keep sets as sets
-    DEFAULT_IGNORE_DIRS: defaults.DEFAULT_IGNORE_DIRS,
-    DEFAULT_IGNORE_FILES: defaults.DEFAULT_IGNORE_FILES,
-    DEFAULT_INCLUDE_PATTERNS: defaults.DEFAULT_INCLUDE_PATTERNS,
+    DEFAULT_IGNORE_DIRS: defaultConfig.DEFAULT_IGNORE_DIRS,
+    DEFAULT_IGNORE_FILES: defaultConfig.DEFAULT_IGNORE_FILES,
+    DEFAULT_INCLUDE_PATTERNS: defaultConfig.DEFAULT_INCLUDE_PATTERNS,
   };
 
   // Ensure OPENAI_API_KEY is present

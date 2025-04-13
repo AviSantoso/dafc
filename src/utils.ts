@@ -4,6 +4,9 @@ import ignore, { type Ignore } from "ignore";
 import envPaths from "env-paths";
 import open from "open";
 import { config } from "./config";
+import { GLOBAL_CONFIG_FILE, PROJECT_CONFIG_FILE } from "./constants";
+
+const paths = envPaths("dafc", { suffix: "" }); // Use 'dafc' as the app name
 
 // --- File System & Paths ---
 
@@ -37,12 +40,11 @@ export async function ensureDirExists(dirPath: string): Promise<void> {
 }
 
 export function getGlobalConfigPath(): string {
-  const paths = envPaths("dafc", { suffix: "" }); // Use 'dafc' as the app name
-  return join(paths.config, config.GLOBAL_CONFIG_FILE);
+  return join(paths.config, GLOBAL_CONFIG_FILE);
 }
 
 export function getProjectConfigPath(rootDir: string = "."): string {
-  return join(rootDir, config.PROJECT_CONFIG_FILE);
+  return join(rootDir, PROJECT_CONFIG_FILE);
 }
 
 // --- Ignore Logic ---
@@ -143,4 +145,40 @@ export async function openFileInEditor(filePath: string): Promise<void> {
     console.error(`❌ Failed to open file in editor: ${error.message}`);
     console.error(`Please open the file manually: ${filePath}`);
   }
+}
+
+export function dotenvStringify(obj: Record<string, any>) {
+  const quote = /[\s"'#]/;
+  function stringifyPair([key, val]: [string, any]) {
+    let strval = "";
+    switch (typeof val) {
+      case "string":
+        try {
+          JSON.parse(val);
+          strval = val;
+        } catch (e) {
+          strval = quote.test(val) ? JSON.stringify(val) : val;
+        }
+        break;
+      case "boolean":
+      case "number":
+        strval = String(val);
+        break;
+      case "undefined":
+        strval = "";
+        break;
+      case "object":
+        if (val !== null) {
+          strval = JSON.stringify(val);
+        }
+        break;
+    }
+    return `${key}=${strval}`;
+  }
+
+  if (typeof obj !== "object") {
+    throw new Error("stringify() expects an object");
+  }
+
+  return Object.entries(obj).map(stringifyPair).join("\n");
 }

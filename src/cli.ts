@@ -14,7 +14,7 @@ import {
   ensureDirExists,
   openFileInEditor,
 } from "./utils";
-import { config } from "./config";
+import { config, defaultConfig } from "./config";
 // Dynamically import package.json to get version
 import pkg from "../package.json";
 
@@ -211,23 +211,23 @@ program
 
 # --- Required ---
 # Your API key for the LLM service
-# OPENAI_API_KEY=your-api-key-here
+# OPENAI_API_KEY=
 
 # --- Optional Overrides ---
 # Specify the model to use (default: ${config.OPENAI_MODEL})
-# OPENAI_MODEL=google/gemini-1.5-pro-latest
+# OPENAI_MODEL=${defaultConfig.OPENAI_MODEL}
 
 # Specify the API endpoint base URL (default: ${config.OPENAI_API_BASE})
-# OPENAI_API_BASE=https://openrouter.ai/api/v1
+# OPENAI_API_BASE=${defaultConfig.OPENAI_API_BASE}
 
 # Adjust LLM temperature (0.0 to 2.0, default: ${config.TEMPERATURE})
-# TEMPERATURE=0.5
+# TEMPERATURE=${defaultConfig.TEMPERATURE}
 
 # Adjust max context tokens (default: ${config.MAX_CONTEXT_TOKENS})
-# MAX_CONTEXT_TOKENS=900000
+# MAX_CONTEXT_TOKENS=${defaultConfig.MAX_CONTEXT_TOKENS}
 
 # Adjust max file size bytes (default: ${config.MAX_FILE_SIZE_BYTES})
-# MAX_FILE_SIZE_BYTES=1048576
+# MAX_FILE_SIZE_BYTES=${defaultConfig.MAX_FILE_SIZE_BYTES}
 `;
 
     try {
