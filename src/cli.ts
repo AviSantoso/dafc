@@ -15,7 +15,7 @@ import {
   openFileInEditor,
 } from "./utils";
 import { config, defaultConfig } from "./config";
-// Dynamically import package.json to get version
+
 import pkg from "../package.json";
 
 const program = new Command();
@@ -243,7 +243,7 @@ program
         await writeFile(configPath, defaultConfigContent, "utf-8");
       }
 
-      // Open in editor
+      // Open project config in editor
       await openFileInEditor(configPath);
     } catch (error: any) {
       console.error(`\n❌ Error managing config file: ${error.message}`);
