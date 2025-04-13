@@ -10,7 +10,7 @@ if (!config.OPENAI_API_KEY) {
 }
 
 const openai = new OpenAI({
-  baseURL: config.API_BASE_URL,
+  baseURL: config.OPENAI_API_BASE,
   apiKey: config.OPENAI_API_KEY, // Use the configured API key
   defaultHeaders: {
     // Add headers recommended by OpenRouter
@@ -43,8 +43,8 @@ export async function queryLLM(
   while (attempt < config.MAX_RETRIES) {
     try {
       console.log(
-        `\nSending request to model '${config.MODEL_NAME}' via ${
-          config.API_BASE_URL
+        `\nSending request to model '${config.OPENAI_MODEL}' via ${
+          config.OPENAI_API_BASE
         }${
           attempt > 0 ? ` (attempt ${attempt + 1}/${config.MAX_RETRIES})` : ""
         }...`
@@ -52,7 +52,7 @@ export async function queryLLM(
       const startTime = Date.now();
 
       const stream = await openai.chat.completions.create({
-        model: config.MODEL_NAME,
+        model: config.OPENAI_MODEL,
         messages,
         temperature: config.TEMPERATURE,
         stream: true,
@@ -88,7 +88,7 @@ export async function queryLLM(
         if (error.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
           console.error(
-            `1. Your OPENAI_API_KEY in .env or environment is correct for the service at ${config.API_BASE_URL}.`
+            `1. Your OPENAI_API_KEY in .env or environment is correct for the service at ${config.OPENAI_API_BASE}.`
           );
           console.error("2. You have sufficient credits/permissions.");
           console.error(
@@ -123,7 +123,7 @@ export async function queryLLM(
       ) {
         // Handle generic network errors
         console.error(
-          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and OPENAI_API_BASE.`
+          `Network error - Could not reach API endpoint (${config.OPENAI_API_BASE}). Check connection and OPENAI_API_BASE.`
         );
       } else {
         // Handle other unexpected errors

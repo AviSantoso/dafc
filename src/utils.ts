@@ -1,7 +1,11 @@
-import { readFile } from "fs/promises";
+import { readFile, mkdir } from "fs/promises";
 import { join } from "path";
 import ignore, { type Ignore } from "ignore";
+import envPaths from "env-paths";
+import open from "open";
 import { config } from "./config";
+
+// --- File System & Paths ---
 
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,6 +25,28 @@ export async function readFileContent(
   }
 }
 
+export async function ensureDirExists(dirPath: string): Promise<void> {
+  try {
+    await mkdir(dirPath, { recursive: true });
+  } catch (error: any) {
+    // Ignore EEXIST error (directory already exists)
+    if (error.code !== "EEXIST") {
+      throw error; // Re-throw other errors
+    }
+  }
+}
+
+export function getGlobalConfigPath(): string {
+  const paths = envPaths("dafc", { suffix: "" }); // Use 'dafc' as the app name
+  return join(paths.config, config.GLOBAL_CONFIG_FILE);
+}
+
+export function getProjectConfigPath(rootDir: string = "."): string {
+  return join(rootDir, config.PROJECT_CONFIG_FILE);
+}
+
+// --- Ignore Logic ---
+
 export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
   const ig = ignore();
 
@@ -35,7 +61,6 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
   );
   if (gitignoreContent) {
     ig.add(gitignoreContent);
-    // console.debug("Loaded .gitignore rules");
   }
 
   // Load .dafcignore
@@ -44,7 +69,6 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
   );
   if (dafcignoreContent) {
     ig.add(dafcignoreContent);
-    // console.debug("Loaded .dafcignore rules");
   }
 
   return ig;
@@ -52,11 +76,8 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
 export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
   try {
-    // Normalize path for ignore matching (remove leading slash if present)
     const normalizedPath = relativePath.replace(/^[\/\\]/, "");
-    const isIgnored = ig.ignores(normalizedPath);
-    // console.debug(`Path: ${normalizedPath}, Ignored: ${isIgnored}`); // Debugging
-    return !isIgnored;
+    return !ig.ignores(normalizedPath);
   } catch (error) {
     console.warn(`Error checking path ${relativePath}: ${error}`);
     return false;
@@ -64,20 +85,18 @@ export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
 }
 
 export function isAllowedExtension(filename: string): boolean {
-  // Ignore files starting with '.' unless explicitly allowed (like .env.example, .rc files)
   if (
     filename.startsWith(".") &&
     !config.DEFAULT_INCLUDE_PATTERNS.some((pattern) => pattern.test(filename))
   ) {
-    // console.debug(`Skipping hidden file: ${filename}`); // Debugging
     return false;
   }
-  const allowed = config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
+  return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
     pattern.test(filename)
   );
-  // if (!allowed) console.debug(`Skipping disallowed extension: ${filename}`); // Debugging
-  return allowed;
 }
+
+// --- Formatting & Misc ---
 
 export function formatBytes(bytes: number, decimals = 2): string {
   if (bytes === 0) return "0 Bytes";
@@ -85,7 +104,6 @@ export function formatBytes(bytes: number, decimals = 2): string {
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  // Handle potential edge case where i might be out of bounds for sizes array
   const sizeIndex = Math.min(i, sizes.length - 1);
   return (
     parseFloat((bytes / Math.pow(k, sizeIndex)).toFixed(dm)) +
@@ -94,7 +112,6 @@ export function formatBytes(bytes: number, decimals = 2): string {
   );
 }
 
-// Simple debounce function
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
   wait: number
@@ -106,18 +123,24 @@ export function debounce<T extends (...args: any[]) => void>(
     }
     timeout = setTimeout(() => {
       func(...args);
-      timeout = null; // Clear timeout after execution
+      timeout = null;
     }, wait);
   };
 }
 
-/**
- * Estimates the number of tokens in a given text.
- * Uses a simple character-based approximation.
- * @param text The text to estimate tokens for.
- * @returns The estimated number of tokens.
- */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
   return Math.ceil(text.length / config.APPROX_CHARS_PER_TOKEN);
+}
+
+// --- Editor ---
+
+export async function openFileInEditor(filePath: string): Promise<void> {
+  try {
+    console.log(`Attempting to open ${filePath} in your default editor...`);
+    await open(filePath);
+  } catch (error: any) {
+    console.error(`❌ Failed to open file in editor: ${error.message}`);
+    console.error(`Please open the file manually: ${filePath}`);
+  }
 }
