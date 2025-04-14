@@ -12,6 +12,8 @@
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
+    "chromadb": "^2.2.0",
+    "chromadb-default-embed": "^2.14.0",
     "clipboardy": "^4.0.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
