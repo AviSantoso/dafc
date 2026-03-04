@@ -3,8 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://badge.fury.io/js/%40wagn%2Fdafc.svg)](https://badge.fury.io/js/%40wagn%2Fdafc)
 
-
-**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 1.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
+**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 1.5 Pro. Instead of complex context management, DAFC lets you easily dump your _entire_ (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
 **Read the full philosophy and background in the [introductory blog post](https://avisantoso.com/gemini-and-context-windows).**
 
@@ -12,24 +11,24 @@
 
 The "Dumb as Fuck Coding" methodology hinges on keeping projects simple and constrained:
 
-*   **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
-*   **Max ~50 Files (Aim for ~10):** Limits overall scope.
-*   **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
+- **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
+- **Max ~50 Files (Aim for ~10):** Limits overall scope.
+- **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
 
-By adhering to these rules, the *entire* relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
+By adhering to these rules, the _entire_ relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
 
 ## Features
 
-*   **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `config`, `init`).
-*   **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
-*   **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS`).
-*   **Layered Configuration:** Uses global (`~/.config/dafc/config.env`), project (`./.env`), and environment variables for flexible settings (Env > Project > Global).
-*   **Easy Config Editing:** `dafc config` command to open config files in your default editor.
-*   **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
-*   **Flexible LLM Backend:** Configurable via config files/env vars to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, Google AI Studio, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
-*   **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
-*   **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
-*   **Easy Installation:** Shell script, package managers (npm, yarn, bun).
+- **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `config`, `init`).
+- **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
+- **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS`).
+- **Layered Configuration:** Uses global (`~/.config/dafc/config.env`), project (`./.env`), and environment variables for flexible settings (Env > Project > Global).
+- **Easy Config Editing:** `dafc config` command to open config files in your default editor.
+- **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
+- **Flexible LLM Backend:** Configurable via config files/env vars to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, Google AI Studio, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
+- **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
+- **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
+- **Easy Installation:** Shell script, package managers (npm, yarn, bun).
 
 ## Installation
 
@@ -37,11 +36,13 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 
 1.  Make sure you have **Bun** ([install instructions](https://bun.sh/docs/installation)) and **Git** installed.
 2.  Run the following command in your terminal. Installs to `/usr/local/bin` by default:
+
     ```bash
     curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
-    *   **NOTE:** Uses `sudo` for default install location. Review the script if needed.
-    *   Alternatively, modify the `INSTALL_DIR` variable in the script before running, or install via package manager.
+
+    - **NOTE:** Uses `sudo` for default install location. Review the script if needed.
+    - Alternatively, modify the `INSTALL_DIR` variable in the script before running, or install via package manager.
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 4.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
@@ -50,6 +51,7 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 ### Using NPM/Yarn/Bun Package Managers
 
 1.  Install globally with your preferred package manager:
+
     ```bash
     # Using npm
     npm install -g @wagn/dafc
@@ -94,51 +96,57 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 DAFC uses a layered configuration system:
 
 1.  **Environment Variables (Highest Priority):** Any setting prefixed with `OPENAI_` or other config keys (e.g., `TEMPERATURE`, `MAX_CONTEXT_TOKENS`) set in your shell environment will override all other settings.
+
     ```bash
     export OPENAI_API_KEY='your-key-here'
     export OPENAI_MODEL='anthropic/claude-3.5-sonnet'
     ```
 
 2.  **Project `.env` File (Medium Priority):** Create a `.env` file in your project's root directory. Settings here override the global config. This is the recommended place for project-specific LLM choices or API keys.
+
     ```dotenv
     # .env (in your project root)
     OPENAI_API_KEY='project-specific-key-maybe'
     OPENAI_MODEL='openai/gpt-4o'
     ```
-    *   Use `dafc config` to easily create or edit this file.
+
+    - Use `dafc config` to easily create or edit this file.
 
 3.  **Global Config File (Lowest Priority):** A global file stores default settings for all projects. Located at:
-    *   Linux/macOS: `~/.config/dafc/config.env`
-    *   Windows: `%APPDATA%\dafc\Config\config.env` (e.g., `C:\Users\YourUser\AppData\Roaming\dafc\Config\config.env`)
+    - Linux/macOS: `~/.config/dafc/config.env`
+    - Windows: `%APPDATA%\dafc\Config\config.env` (e.g., `C:\Users\YourUser\AppData\Roaming\dafc\Config\config.env`)
+
     ```dotenv
     # ~/.config/dafc/config.env (Example)
     OPENAI_API_KEY='your-default-openrouter-key'
     OPENAI_MODEL='google/gemini-1.5-pro-latest'
     OPENAI_API_BASE='https://openrouter.ai/api/v1'
     ```
-    *   Use `dafc config --global` to easily create or edit this file.
+
+    - Use `dafc config --global` to easily create or edit this file.
 
 **Key Configuration Variables:**
 
-*   `OPENAI_API_KEY` (Required): Your API key for the chosen service.
-*   `OPENAI_MODEL`: The specific LLM model identifier (e.g., `google/gemini-1.5-pro-latest`, `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`).
-*   `OPENAI_API_BASE`: The base URL for the LLM API endpoint (e.g., `https://openrouter.ai/api/v1`, `https://api.openai.com/v1`, `https://api.featherless.ai/v1`).
-*   `TEMPERATURE`: LLM creativity/randomness (0.0-2.0).
-*   `MAX_CONTEXT_TOKENS`: Safety limit for context size (default ~900k).
-*   `MAX_FILE_SIZE_BYTES`: Skip files larger than this (default 1MB).
+- `OPENAI_API_KEY` (Required): Your API key for the chosen service.
+- `OPENAI_MODEL`: The specific LLM model identifier (e.g., `google/gemini-1.5-pro-latest`, `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`).
+- `OPENAI_API_BASE`: The base URL for the LLM API endpoint (e.g., `https://openrouter.ai/api/v1`, `https://api.openai.com/v1`, `https://api.featherless.ai/v1`).
+- `TEMPERATURE`: LLM creativity/randomness (0.0-2.0).
+- `MAX_CONTEXT_TOKENS`: Safety limit for context size (default ~900k).
+- `MAX_FILE_SIZE_BYTES`: Skip files larger than this (default 1MB).
 
 **Example Setups:**
 
-*   **OpenRouter (Default):** Set `OPENAI_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
-*   **OpenAI:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
-*   **Featherless:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
-*   **Google AI Studio:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. *Note: Google's API might require specific formatting or headers not fully tested.*
+- **OpenRouter (Default):** Set `OPENAI_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
+- **OpenAI:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
+- **Featherless:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
+- **Google AI Studio:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. _Note: Google's API might require specific formatting or headers not fully tested._
 
 **Initialize Helper Files:**
 
 Run `dafc init` in your project's root directory. This creates:
-*   `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
-*   `.dafcr`: Define custom system prompts or rules for the LLM.
+
+- `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
+- `.dafcr`: Define custom system prompts or rules for the LLM.
 
 ## Usage
 
@@ -192,9 +200,9 @@ dafc context --save --watch
 dafc context -s specific_context.txt -w
 ```
 
-*   `-s, --save [filename]`: Saves context. Defaults to `context.md` if no filename given.
-*   `--copy`: Copies context to clipboard.
-*   `-w, --watch`: Requires `--save`. Monitors project and updates saved file on changes.
+- `-s, --save [filename]`: Saves context. Defaults to `context.md` if no filename given.
+- `--copy`: Copies context to clipboard.
+- `-w, --watch`: Requires `--save`. Monitors project and updates saved file on changes.
 
 **3. Edit Configuration (`dafc config`)**
 
@@ -239,8 +247,9 @@ Contributions welcome! Please submit pull requests or open issues.
 ## Disclaimer
 
 This tool sends your code (excluding ignored files) to external LLMs.
-*   **Do not use with sensitive codebases.** Keep secrets out of code, use ignore files, and manage API keys securely.
-*   Use at your own risk. **Always review LLM-generated code carefully.**
+
+- **Do not use with sensitive codebases.** Keep secrets out of code, use ignore files, and manage API keys securely.
+- Use at your own risk. **Always review LLM-generated code carefully.**
 
 ## License
 
