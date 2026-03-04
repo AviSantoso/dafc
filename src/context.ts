@@ -2,14 +2,54 @@ import fg from "fast-glob";
 import { readFile } from "fs/promises";
 import { join } from "path";
 
+export function estimateTokens(text: string): number {
+  return Math.round(text.length / 4);
+}
+
+export async function readIgnorePatterns(
+  cwd: string,
+  ignoreGitignore: boolean
+): Promise<string[]> {
+  const patterns = ["node_modules/**", ".git/**"];
+
+  if (!ignoreGitignore) {
+    try {
+      const gitignore = await readFile(join(cwd, ".gitignore"), "utf-8");
+      for (const line of gitignore.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          patterns.push(trimmed);
+        }
+      }
+    } catch {
+      // no .gitignore
+    }
+  }
+
+  try {
+    const dafcignore = await readFile(join(cwd, ".dafcignore"), "utf-8");
+    for (const line of dafcignore.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#")) {
+        patterns.push(trimmed);
+      }
+    }
+  } catch {
+    // no .dafcignore
+  }
+
+  return patterns;
+}
+
 export async function resolveGlobs(
   patterns: string[],
-  cwd: string
+  cwd: string,
+  ignorePatterns: string[]
 ): Promise<string[]> {
   const files = await fg(patterns, {
     cwd,
     dot: true,
-    ignore: ["node_modules/**", ".git/**"],
+    ignore: ignorePatterns,
   });
   return files.sort();
 }

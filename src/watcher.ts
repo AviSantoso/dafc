@@ -17,14 +17,15 @@ function debounce<T extends (...args: unknown[]) => void>(
 export function watchGlobs(
   patterns: string[],
   cwd: string,
-  onChange: () => void
+  onChange: () => void,
+  ignorePatterns: string[]
 ): FSWatcher {
   const debouncedChange = debounce(onChange, 300);
 
   const watcher = chokidar.watch(patterns, {
     cwd,
     ignoreInitial: true,
-    ignored: ["node_modules/**", ".git/**"],
+    ignored: ignorePatterns,
   });
 
   watcher.on("add", debouncedChange);

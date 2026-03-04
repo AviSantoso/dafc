@@ -38,19 +38,25 @@ function formatConversationMarkdown(
   return lines.join("\n");
 }
 
+function formatTokens(n: number): string {
+  return Math.round(n / 1000) >= 1 ? `~${Math.round(n / 1000)}k` : `~${n}`;
+}
+
 export interface AppProps {
   patterns: string[];
   initialFileCount: number;
+  initialTokenCount: number;
   initialMessages: Message[];
   cwd: string;
   registerUpdater: (
-    fn: (context: string, fileCount: number) => void
+    fn: (context: string, fileCount: number, tokenCount: number) => void
   ) => void;
 }
 
 export function App({
   patterns,
   initialFileCount,
+  initialTokenCount,
   initialMessages,
   cwd,
   registerUpdater,
@@ -71,12 +77,14 @@ export function App({
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [fileCount, setFileCount] = useState(initialFileCount);
+  const [tokenCount, setTokenCount] = useState(initialTokenCount);
   const [contextUpdated, setContextUpdated] = useState(false);
 
   useEffect(() => {
-    registerUpdater((context, count) => {
+    registerUpdater((context, count, tokens) => {
       messagesRef.current[1].content = context;
       setFileCount(count);
+      setTokenCount(tokens);
       setContextUpdated(true);
       setStaticMessages((prev) => [
         ...prev,
@@ -242,6 +250,7 @@ export function App({
         <Text bold>dafc</Text>
         <Text dimColor> — watching </Text>
         <Text color="cyan">{fileCount} files</Text>
+        <Text dimColor>  {formatTokens(tokenCount)} tokens</Text>
         <Text dimColor>  {patterns.join(" ")}</Text>
         {contextUpdated && <Text color="yellow">  [context updated]</Text>}
       </Box>
