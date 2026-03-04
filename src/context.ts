@@ -1,4 +1,5 @@
 import fg from "fast-glob";
+import ignore from "ignore";
 import { readFile } from "fs/promises";
 import { join } from "path";
 
@@ -6,52 +7,46 @@ export function estimateTokens(text: string): number {
   return Math.round(text.length / 4);
 }
 
-export async function readIgnorePatterns(
+async function readLines(filePath: string): Promise<string[]> {
+  try {
+    const content = await readFile(filePath, "utf-8");
+    return content
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"));
+  } catch {
+    return [];
+  }
+}
+
+export async function buildIgnoreFilter(
   cwd: string,
   ignoreGitignore: boolean
-): Promise<string[]> {
-  const patterns = ["node_modules/**", ".git/**"];
+): Promise<(file: string) => boolean> {
+  const ig = ignore().add(["node_modules", ".git"]);
 
   if (!ignoreGitignore) {
-    try {
-      const gitignore = await readFile(join(cwd, ".gitignore"), "utf-8");
-      for (const line of gitignore.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith("#")) {
-          patterns.push(trimmed);
-        }
-      }
-    } catch {
-      // no .gitignore
-    }
+    const gitignoreLines = await readLines(join(cwd, ".gitignore"));
+    if (gitignoreLines.length) ig.add(gitignoreLines);
   }
 
-  try {
-    const dafcignore = await readFile(join(cwd, ".dafcignore"), "utf-8");
-    for (const line of dafcignore.split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith("#")) {
-        patterns.push(trimmed);
-      }
-    }
-  } catch {
-    // no .dafcignore
-  }
+  const dafcignoreLines = await readLines(join(cwd, ".dafcignore"));
+  if (dafcignoreLines.length) ig.add(dafcignoreLines);
 
-  return patterns;
+  return (file: string) => !ig.ignores(file);
 }
 
 export async function resolveGlobs(
   patterns: string[],
   cwd: string,
-  ignorePatterns: string[]
+  filter: (file: string) => boolean
 ): Promise<string[]> {
   const files = await fg(patterns, {
     cwd,
     dot: true,
-    ignore: ignorePatterns,
+    ignore: ["node_modules/**", ".git/**"],
   });
-  return files.sort();
+  return files.filter(filter).sort();
 }
 
 export function buildTree(files: string[]): string {

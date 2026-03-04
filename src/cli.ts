@@ -1,7 +1,7 @@
 import React from "react";
 import { render } from "ink";
 import { config } from "./config.js";
-import { resolveGlobs, buildContext, estimateTokens, readIgnorePatterns } from "./context.js";
+import { resolveGlobs, buildContext, estimateTokens, buildIgnoreFilter } from "./context.js";
 import { watchGlobs } from "./watcher.js";
 import { App } from "./ui.js";
 import type { Message } from "./llm.js";
@@ -12,7 +12,10 @@ Reply concisely and clearly. Always reference specific files and line numbers wh
 async function main() {
   const allArgs = process.argv.slice(2);
   const ignoreGitignore = allArgs.includes("--ignore-gitignore");
-  const patterns = allArgs.filter((p) => p !== "--ignore-gitignore");
+  const debug = allArgs.includes("--debug");
+  const patterns = allArgs.filter(
+    (p) => p !== "--ignore-gitignore" && p !== "--debug"
+  );
 
   if (patterns.length === 0) {
     console.error("Usage: dafc <glob> [<glob> ...]");
@@ -29,11 +32,18 @@ async function main() {
   }
 
   const cwd = process.cwd();
-  const ignorePatterns = await readIgnorePatterns(cwd, ignoreGitignore);
+  const filter = await buildIgnoreFilter(cwd, ignoreGitignore);
 
-  const files = await resolveGlobs(patterns, cwd, ignorePatterns);
+  const files = await resolveGlobs(patterns, cwd, filter);
   const contextXml = await buildContext(files, cwd);
   const tokenCount = estimateTokens(contextXml);
+
+  if (debug) {
+    process.stderr.write(`[debug] patterns: ${patterns.join(", ")}\n`);
+    process.stderr.write(`[debug] files (${files.length}):\n`);
+    for (const f of files) process.stderr.write(`  ${f}\n`);
+    process.stderr.write(`[debug] tokens: ~${tokenCount}\n`);
+  }
 
   const messages: Message[] = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -52,9 +62,12 @@ async function main() {
     updater = fn;
   };
 
+  // chokidar still needs basic glob ignores; the filter handles gitignore semantics
+  const watcherIgnore = ["**/node_modules/**", "**/.git/**"];
+
   const watcher = watchGlobs(patterns, cwd, async () => {
     try {
-      const newFiles = await resolveGlobs(patterns, cwd, ignorePatterns);
+      const newFiles = await resolveGlobs(patterns, cwd, filter);
       const newContext = await buildContext(newFiles, cwd);
       const newTokenCount = estimateTokens(newContext);
       if (updater) {
@@ -63,7 +76,7 @@ async function main() {
     } catch {
       // swallow watch errors silently
     }
-  }, ignorePatterns);
+  }, watcherIgnore);
 
   const { waitUntilExit } = render(
     React.createElement(App, {
@@ -71,6 +84,7 @@ async function main() {
       initialFileCount: files.length,
       initialTokenCount: tokenCount,
       initialMessages: messages,
+      initialContext: contextXml,
       cwd,
       registerUpdater,
     }),

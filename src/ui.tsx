@@ -47,6 +47,7 @@ export interface AppProps {
   initialFileCount: number;
   initialTokenCount: number;
   initialMessages: Message[];
+  initialContext: string;
   cwd: string;
   registerUpdater: (
     fn: (context: string, fileCount: number, tokenCount: number) => void
@@ -58,6 +59,7 @@ export function App({
   initialFileCount,
   initialTokenCount,
   initialMessages,
+  initialContext,
   cwd,
   registerUpdater,
 }: AppProps) {
@@ -66,6 +68,7 @@ export function App({
   const lastAssistantRef = useRef(
     "I'm ready to help you explore this codebase."
   );
+  const contextRef = useRef(initialContext);
 
   const [staticMessages, setStaticMessages] = useState<ChatMessage[]>([
     {
@@ -83,6 +86,7 @@ export function App({
   useEffect(() => {
     registerUpdater((context, count, tokens) => {
       messagesRef.current[1].content = context;
+      contextRef.current = context;
       setFileCount(count);
       setTokenCount(tokens);
       setContextUpdated(true);
@@ -154,6 +158,30 @@ export function App({
             setStaticMessages((prev) => [
               ...prev,
               { role: "info", content: `Save failed: ${err.message}` },
+            ]);
+          });
+        return;
+      }
+
+      if (trimmed === "/inspect-context") {
+        const timestamp = new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-")
+          .replace("T", "_")
+          .slice(0, 19);
+        const filename = `dafc_ctx_${timestamp}.md`;
+        const filepath = join(cwd, filename);
+        writeFile(filepath, contextRef.current, "utf-8")
+          .then(() => {
+            setStaticMessages((prev) => [
+              ...prev,
+              { role: "info", content: `Context saved to ${filename}` },
+            ]);
+          })
+          .catch((err: Error) => {
+            setStaticMessages((prev) => [
+              ...prev,
+              { role: "info", content: `Inspect failed: ${err.message}` },
             ]);
           });
         return;
