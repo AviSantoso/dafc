@@ -12,7 +12,7 @@ function getClient(): OpenAI {
   if (!client) {
     client = new OpenAI({
       baseURL: config.OPENAI_API_BASE,
-      apiKey: config.OPENAI_API_KEY,
+      apiKey: config.OPENROUTER_API_KEY,
       defaultHeaders: {
         "HTTP-Referer": "https://github.com/AviSantoso/dafc",
         "X-Title": "DAFC CLI",
@@ -24,7 +24,7 @@ function getClient(): OpenAI {
 
 export async function streamChat(
   messages: Message[],
-  onChunk: (s: string) => void
+  onChunk: (s: string) => void,
 ): Promise<string> {
   const stream = await getClient().chat.completions.create({
     model: config.OPENAI_MODEL,

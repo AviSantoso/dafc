@@ -98,7 +98,7 @@ DAFC uses a layered configuration system:
 1.  **Environment Variables (Highest Priority):** Any setting prefixed with `OPENAI_` or other config keys (e.g., `TEMPERATURE`, `MAX_CONTEXT_TOKENS`) set in your shell environment will override all other settings.
 
     ```bash
-    export OPENAI_API_KEY='your-key-here'
+    export OPENROUTER_API_KEY='your-key-here'
     export OPENAI_MODEL='anthropic/claude-3.5-sonnet'
     ```
 
@@ -106,7 +106,7 @@ DAFC uses a layered configuration system:
 
     ```dotenv
     # .env (in your project root)
-    OPENAI_API_KEY='project-specific-key-maybe'
+    OPENROUTER_API_KEY='project-specific-key-maybe'
     OPENAI_MODEL='openai/gpt-4o'
     ```
 
@@ -118,7 +118,7 @@ DAFC uses a layered configuration system:
 
     ```dotenv
     # ~/.config/dafc/config.env (Example)
-    OPENAI_API_KEY='your-default-openrouter-key'
+    OPENROUTER_API_KEY='your-default-openrouter-key'
     OPENAI_MODEL='google/gemini-1.5-pro-latest'
     OPENAI_API_BASE='https://openrouter.ai/api/v1'
     ```
@@ -127,7 +127,7 @@ DAFC uses a layered configuration system:
 
 **Key Configuration Variables:**
 
-- `OPENAI_API_KEY` (Required): Your API key for the chosen service.
+- `OPENROUTER_API_KEY` (Required): Your API key for the chosen service.
 - `OPENAI_MODEL`: The specific LLM model identifier (e.g., `google/gemini-1.5-pro-latest`, `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`).
 - `OPENAI_API_BASE`: The base URL for the LLM API endpoint (e.g., `https://openrouter.ai/api/v1`, `https://api.openai.com/v1`, `https://api.featherless.ai/v1`).
 - `TEMPERATURE`: LLM creativity/randomness (0.0-2.0).
@@ -136,10 +136,10 @@ DAFC uses a layered configuration system:
 
 **Example Setups:**
 
-- **OpenRouter (Default):** Set `OPENAI_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
-- **OpenAI:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
-- **Featherless:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
-- **Google AI Studio:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. _Note: Google's API might require specific formatting or headers not fully tested._
+- **OpenRouter (Default):** Set `OPENROUTER_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
+- **OpenAI:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
+- **Featherless:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
+- **Google AI Studio:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. _Note: Google's API might require specific formatting or headers not fully tested._
 
 **Initialize Helper Files:**
 

@@ -1,17 +1,17 @@
-Okay, I understand the requirements. You want to make the DAFC CLI more flexible regarding the LLM provider by using standard OpenAI-compatible environment variables (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`), add a maximum context limit check, update the default model, and update the documentation accordingly, including an example for using Featherless.
+Okay, I understand the requirements. You want to make the DAFC CLI more flexible regarding the LLM provider by using standard OpenAI-compatible environment variables (`OPENROUTER_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`), add a maximum context limit check, update the default model, and update the documentation accordingly, including an example for using Featherless.
 
 Here are the instructions and the updated code for the necessary files:
 
 **Instructions:**
 
 1.  **Replace the content** of the following files with the code provided below:
-    *   `src/config.ts`
-    *   `src/utils.ts`
-    *   `src/context.ts`
-    *   `src/cli.ts`
-    *   `src/llm.ts`
-    *   `README.md`
-    *   `install.sh`
+    - `src/config.ts`
+    - `src/utils.ts`
+    - `src/context.ts`
+    - `src/cli.ts`
+    - `src/llm.ts`
+    - `README.md`
+    - `install.sh`
 2.  **Review** the changes, especially in `README.md` and `config.ts`, to ensure they match your expectations for defaults and instructions.
 3.  **Rebuild** the CLI using `bun run build`.
 4.  **Test** the `dafc ask`, `dafc context`, and `dafc init` commands. Ensure the environment variable changes and context limit work as expected.
@@ -21,6 +21,7 @@ Here are the instructions and the updated code for the necessary files:
 **Updated Files:**
 
 --- ./src/config.ts ---
+
 ```typescript
 import dotenv from "dotenv";
 
@@ -30,8 +31,9 @@ dotenv.config({ override: true }); // Load default .env if specific one not foun
 
 export const config = {
   // LLM Settings - Uses OpenAI standard env variables where possible
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "", // Use standard OpenAI key name
-  MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Default to large context model on OpenRouter
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "", // Use standard OpenAI key name
+  MODEL_NAME:
+    process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Default to large context model on OpenRouter
   API_BASE_URL: process.env.OPENAI_API_BASE || "https://openrouter.ai/api/v1", // Default to OpenRouter
   TEMPERATURE: 0.3,
   MAX_RETRIES: 5,
@@ -115,22 +117,27 @@ export const config = {
 };
 
 // Validate essential config
-if (!config.OPENAI_API_KEY) {
-  console.error("Error: OPENAI_API_KEY environment variable not set.");
-  console.error("This tool requires an API key for an OpenAI-compatible service.");
-  console.error("1. Obtain an API key (e.g., from OpenRouter, OpenAI, Featherless).");
+if (!config.OPENROUTER_API_KEY) {
+  console.error("Error: OPENROUTER_API_KEY environment variable not set.");
+  console.error(
+    "This tool requires an API key for an OpenAI-compatible service.",
+  );
+  console.error(
+    "1. Obtain an API key (e.g., from OpenRouter, OpenAI, Featherless).",
+  );
   console.error("2. Create a .env file in your project root with:");
-  console.error("   OPENAI_API_KEY='your-key-here'");
+  console.error("   OPENROUTER_API_KEY='your-key-here'");
   console.error("   # Optional: Override model and API endpoint");
   console.error("   # OPENAI_MODEL='openai/gpt-4o'");
   console.error("   # OPENAI_API_BASE='https://api.openai.com/v1'");
   console.error("3. Or, set the environment variable directly:");
-  console.error("   export OPENAI_API_KEY='your-key-here'");
+  console.error("   export OPENROUTER_API_KEY='your-key-here'");
   process.exit(1);
 }
 ```
 
 --- ./src/utils.ts ---
+
 ```typescript
 import { readFile } from "fs/promises";
 import { join } from "path";
@@ -142,7 +149,7 @@ export async function sleep(ms: number): Promise<void> {
 }
 
 export async function readFileContent(
-  filePath: string
+  filePath: string,
 ): Promise<string | null> {
   try {
     return await readFile(filePath, "utf-8");
@@ -165,7 +172,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .gitignore
   const gitignoreContent = await readFileContent(
-    join(rootDir, config.GIT_IGNORE_FILE)
+    join(rootDir, config.GIT_IGNORE_FILE),
   );
   if (gitignoreContent) {
     ig.add(gitignoreContent);
@@ -174,7 +181,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .dafcignore
   const dafcignoreContent = await readFileContent(
-    join(rootDir, config.DAFC_IGNORE_FILE)
+    join(rootDir, config.DAFC_IGNORE_FILE),
   );
   if (dafcignoreContent) {
     ig.add(dafcignoreContent);
@@ -207,7 +214,7 @@ export function isAllowedExtension(filename: string): boolean {
     return false;
   }
   const allowed = config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
-    pattern.test(filename)
+    pattern.test(filename),
   );
   // if (!allowed) console.debug(`Skipping disallowed extension: ${filename}`); // Debugging
   return allowed;
@@ -231,7 +238,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 // Simple debounce function
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
   return (...args: Parameters<T>) => {
@@ -258,6 +265,7 @@ export function estimateTokens(text: string): number {
 ```
 
 --- ./src/context.ts ---
+
 ```typescript
 import { readdir, stat } from "fs/promises";
 import { join, relative } from "path";
@@ -288,7 +296,7 @@ export class ContextTooLargeError extends Error {
 
 export async function gatherContext(
   rootDir: string = ".",
-  ig: Ignore
+  ig: Ignore,
 ): Promise<{ context: string; files: FileInfo[]; rules: string | null }> {
   const files: FileInfo[] = [];
   let totalSize = 0;
@@ -324,7 +332,7 @@ RULES_PLACEHOLDER
       throw new ContextTooLargeError(
         `Context limit (${
           config.MAX_CONTEXT_TOKENS
-        } tokens) exceeded by rules file (${config.DAFC_RULES_FILE}) alone. Estimated tokens: ${totalEstimatedTokens}.`
+        } tokens) exceeded by rules file (${config.DAFC_RULES_FILE}) alone. Estimated tokens: ${totalEstimatedTokens}.`,
       );
     }
   }
@@ -355,8 +363,8 @@ RULES_PLACEHOLDER
           if (fileStat.size > config.MAX_FILE_SIZE_BYTES) {
             console.warn(
               `Skipping ${relativePath}: File size (${formatBytes(
-                fileStat.size
-              )}) exceeds limit (${formatBytes(config.MAX_FILE_SIZE_BYTES)})`
+                fileStat.size,
+              )}) exceeds limit (${formatBytes(config.MAX_FILE_SIZE_BYTES)})`,
             );
             continue;
           }
@@ -380,13 +388,15 @@ Content:
 
             // Check token limit BEFORE adding the file
             if (
-              totalEstimatedTokens + estimatedFileTokens + fileBoilerplateTokens >
+              totalEstimatedTokens +
+                estimatedFileTokens +
+                fileBoilerplateTokens >
               config.MAX_CONTEXT_TOKENS
             ) {
               throw new ContextTooLargeError(
                 `Context limit (${
                   config.MAX_CONTEXT_TOKENS
-                } tokens) exceeded while adding file: ${relativePath}. Current estimated tokens: ${totalEstimatedTokens}. File estimated tokens: ${estimatedFileTokens}. Aborting.`
+                } tokens) exceeded while adding file: ${relativePath}. Current estimated tokens: ${totalEstimatedTokens}. File estimated tokens: ${estimatedFileTokens}. Aborting.`,
               );
             }
 
@@ -414,7 +424,7 @@ Content:
 
   console.log(`Starting context scan from root: ${rootDir}`);
   console.log(
-    `Max context limit set to approximately ${config.MAX_CONTEXT_TOKENS} tokens.`
+    `Max context limit set to approximately ${config.MAX_CONTEXT_TOKENS} tokens.`,
   );
 
   // Wrap walkDirectory in a try...catch to handle the ContextTooLargeError
@@ -424,15 +434,17 @@ Content:
     if (error instanceof ContextTooLargeError) {
       console.error(`\n❌ ${error.message}`);
       console.error(
-        "Consider excluding more files/directories using .gitignore or .dafcignore, or simplifying your project."
+        "Consider excluding more files/directories using .gitignore or .dafcignore, or simplifying your project.",
       );
     } else {
-      console.error(`\n❌ An unexpected error occurred during context scan:`, error);
+      console.error(
+        `\n❌ An unexpected error occurred during context scan:`,
+        error,
+      );
     }
     // Re-throw the specific error for the CLI to handle exit
     throw error;
   }
-
 
   // Sort files by path for consistent context
   files.sort((a, b) => a.path.localeCompare(b.path));
@@ -440,7 +452,7 @@ Content:
   const contextBlocks: string[] = [];
   contextBlocks.push(`[START PROJECT CONTEXT]`);
   contextBlocks.push(
-    `Root Directory: ${rootDir === "." ? process.cwd() : rootDir}`
+    `Root Directory: ${rootDir === "." ? process.cwd() : rootDir}`,
   );
   contextBlocks.push(`Total Files Included: ${files.length}`);
   contextBlocks.push(`Total Size Included: ${formatBytes(totalSize)}`);
@@ -475,7 +487,7 @@ ${rulesContent}
 [END RULES]`);
   } else {
     console.log(
-      `No ${config.DAFC_RULES_FILE} found, proceeding without custom rules.`
+      `No ${config.DAFC_RULES_FILE} found, proceeding without custom rules.`,
     );
   }
 
@@ -483,8 +495,8 @@ ${rulesContent}
 
   console.log(
     `Context gathered: ${files.length} files, ${formatBytes(
-      totalSize
-    )}, ~${totalEstimatedTokens} tokens.`
+      totalSize,
+    )}, ~${totalEstimatedTokens} tokens.`,
   );
 
   return { context: contextBlocks.join("\n\n"), files, rules: rulesContent };
@@ -492,6 +504,7 @@ ${rulesContent}
 ```
 
 --- ./src/cli.ts ---
+
 ```typescript
 #!/usr/bin/env bun
 import { Command, Option } from "commander";
@@ -511,7 +524,7 @@ program
   .name("dafc")
   .version(pkg.version)
   .description(
-    "DAFC CLI - Interact with LLMs using your entire codebase as context."
+    "DAFC CLI - Interact with LLMs using your entire codebase as context.",
   );
 
 program
@@ -527,7 +540,7 @@ program
 
       if (files.length === 0) {
         console.warn(
-          "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore)."
+          "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore).",
         );
         // Proceeding with only prompt + rules might still be useful
       }
@@ -554,12 +567,12 @@ program
   .addOption(
     new Option(
       "-s, --save [outputFile]",
-      "Save context to a file (default: context.md)"
-    ).argParser((value) => value || "context.md") // Set default if flag exists but no value
+      "Save context to a file (default: context.md)",
+    ).argParser((value) => value || "context.md"), // Set default if flag exists but no value
   )
   .option(
     "-w, --watch",
-    "Watch for file changes and update the saved context file (requires --save)"
+    "Watch for file changes and update the saved context file (requires --save)",
   )
   .option("-c, --copy", "Copy the context to the clipboard")
   .action(async (opts: { save?: string; watch?: boolean; copy?: boolean }) => {
@@ -567,7 +580,7 @@ program
     console.log("Gathering context...");
 
     const performGatherAndOutput = async (
-      isInitialRun = true
+      isInitialRun = true,
     ): Promise<string | null> => {
       try {
         const ig = await createIgnoreFilter(rootDir); // Recreate filter in case ignores change
@@ -575,7 +588,7 @@ program
 
         if (files.length === 0 && isInitialRun) {
           console.warn(
-            "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore)."
+            "Warning: No files were included in the context. Check your include patterns and ignore files (.gitignore, .dafcignore).",
           );
         }
 
@@ -587,7 +600,7 @@ program
             console.log(`✅ Context saved to ${savePath}`);
           } else {
             console.log(
-              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`
+              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`,
             );
           }
         }
@@ -606,11 +619,11 @@ program
         }
         return context; // Return context for potential reuse
       } catch (error: any) {
-         // Handle specific context too large error
+        // Handle specific context too large error
         if (error instanceof ContextTooLargeError) {
-            // Message already logged by gatherContext
-            if (!opts.watch) process.exit(1); // Exit if not watching
-            return null; // Indicate error in watch mode
+          // Message already logged by gatherContext
+          if (!opts.watch) process.exit(1); // Exit if not watching
+          return null; // Indicate error in watch mode
         }
         // Handle other errors
         console.error(`\n❌ Error gathering context: ${error.message}`);
@@ -626,7 +639,7 @@ program
     if (opts.watch) {
       if (!opts.save) {
         console.error(
-          "❌ Error: --watch requires --save to specify an output file."
+          "❌ Error: --watch requires --save to specify an output file.",
         );
         process.exit(1);
       }
@@ -636,7 +649,7 @@ program
 
       const debouncedRegenerate = debounce(
         () => performGatherAndOutput(false),
-        500
+        500,
       ); // Debounce regeneration
 
       try {
@@ -656,8 +669,8 @@ program
           // Need relative path for ignore check
           const relativeEventPath = relative(rootDir, eventPath);
           if (!isAllowedPath(relativeEventPath, igForWatch)) {
-             // console.log(`Ignoring change in ignored path: ${relativeEventPath}`); // Debug
-             continue;
+            // console.log(`Ignoring change in ignored path: ${relativeEventPath}`); // Debug
+            continue;
           }
 
           // console.log(`Detected ${event.eventType} in ${event.filename}`); // Debug logging
@@ -673,7 +686,7 @@ program
 program
   .command("init")
   .description(
-    "Initialize DAFC config files (.dafcignore, .dafcr) in the current directory."
+    "Initialize DAFC config files (.dafcignore, .dafcr) in the current directory.",
   )
   .action(async () => {
     const rootDir = process.cwd();
@@ -752,10 +765,10 @@ Adhere to the DAFC principles: keep code simple, modular, and within limits (e.g
 
       console.log("\nInitialization complete. You can customize these files.");
       console.log(
-        `- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`
+        `- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`,
       );
       console.log(
-        `- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`
+        `- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`,
       );
     } catch (error: any) {
       console.error(`\n❌ Error initializing config files: ${error.message}`);
@@ -789,6 +802,7 @@ program.parse(process.argv);
 ```
 
 --- ./src/llm.ts ---
+
 ```typescript
 import { writeFile } from "fs/promises";
 import OpenAI from "openai";
@@ -796,14 +810,14 @@ import { config } from "./config";
 import { sleep } from "./utils";
 
 // Ensure API key is present before initializing OpenAI client
-if (!config.OPENAI_API_KEY) {
-  console.error("FATAL: OPENAI_API_KEY is not configured. Exiting.");
+if (!config.OPENROUTER_API_KEY) {
+  console.error("FATAL: OPENROUTER_API_KEY is not configured. Exiting.");
   process.exit(1);
 }
 
 const openai = new OpenAI({
   baseURL: config.API_BASE_URL,
-  apiKey: config.OPENAI_API_KEY, // Use the configured API key
+  apiKey: config.OPENROUTER_API_KEY, // Use the configured API key
   defaultHeaders: {
     // Add headers recommended by OpenRouter
     "HTTP-Referer": "https://github.com/AviSantoso/dafc", // Replace with your app URL or repo
@@ -814,7 +828,7 @@ const openai = new OpenAI({
 export async function queryLLM(
   context: string,
   userPrompt: string,
-  systemPrompt: string | null // Allow system prompt to be null
+  systemPrompt: string | null, // Allow system prompt to be null
 ): Promise<void> {
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
@@ -837,7 +851,7 @@ export async function queryLLM(
       console.log(
         `\nSending request to model '${config.MODEL_NAME}' via ${config.API_BASE_URL}${
           attempt > 0 ? ` (attempt ${attempt + 1}/${config.MAX_RETRIES})` : ""
-        }...`
+        }...`,
       );
       const startTime = Date.now();
 
@@ -878,43 +892,55 @@ export async function queryLLM(
         if (error.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
           console.error(
-            "1. Your OPENAI_API_KEY in .env or environment is correct for the service at OPENAI_API_BASE."
+            "1. Your OPENROUTER_API_KEY in .env or environment is correct for the service at OPENAI_API_BASE.",
           );
           console.error("2. You have sufficient credits/permissions.");
-          console.error("3. The model name is correct and available via the endpoint.");
+          console.error(
+            "3. The model name is correct and available via the endpoint.",
+          );
           process.exit(1); // Don't retry auth errors
         }
         if (error.status === 402) {
-          console.error("\nPayment Required. Check your account credits/billing.");
+          console.error(
+            "\nPayment Required. Check your account credits/billing.",
+          );
           process.exit(1);
         }
         if (error.status === 429) {
-          console.error("\nRate Limited or Quota Exceeded. Please wait before trying again or check your limits.");
+          console.error(
+            "\nRate Limited or Quota Exceeded. Please wait before trying again or check your limits.",
+          );
           // Exponential backoff will handle retry delay
         }
-        if (error.status === 400 && error.code === 'context_length_exceeded') {
-             console.error("\nContext Length Exceeded. The model cannot handle the amount of context provided.");
-             console.error("Try excluding more files/directories or simplifying your request.");
-             process.exit(1); // Don't retry context length errors
+        if (error.status === 400 && error.code === "context_length_exceeded") {
+          console.error(
+            "\nContext Length Exceeded. The model cannot handle the amount of context provided.",
+          );
+          console.error(
+            "Try excluding more files/directories or simplifying your request.",
+          );
+          process.exit(1); // Don't retry context length errors
         }
-
-      } else if (error.code === "ENOTFOUND" || error.message.includes("fetch failed")) {
+      } else if (
+        error.code === "ENOTFOUND" ||
+        error.message.includes("fetch failed")
+      ) {
         // Handle generic network errors
         console.error(
-          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and OPENAI_API_BASE.`
+          `Network error - Could not reach API endpoint (${config.API_BASE_URL}). Check connection and OPENAI_API_BASE.`,
         );
       } else {
         // Handle other unexpected errors
         console.error(`An unexpected error occurred: ${error.message}`);
-         if (error.stack) {
-            console.error(error.stack);
-         }
+        if (error.stack) {
+          console.error(error.stack);
+        }
       }
 
       attempt++;
       if (attempt >= config.MAX_RETRIES) {
         console.error(
-          `\nFailed after ${config.MAX_RETRIES} attempts. Exiting.`
+          `\nFailed after ${config.MAX_RETRIES} attempts. Exiting.`,
         );
         process.exit(1);
       }
@@ -928,13 +954,14 @@ export async function queryLLM(
 ```
 
 --- ./README.md ---
-```md
+
+````md
 # DAFC (The Fuck?) CLI - Dumb as Fuck Coding Tool
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/npm/v/dafc-cli)](https://www.npmjs.com/package/dafc-cli) <!-- Assuming you publish to npm -->
 
-**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 2.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
+**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 2.5 Pro. Instead of complex context management, DAFC lets you easily dump your _entire_ (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
 **Read the full philosophy and background in the [introductory blog post](https://avisantoso.com/gemini-and-context-windows).**
 
@@ -942,22 +969,22 @@ export async function queryLLM(
 
 The "Dumb as Fuck Coding" methodology hinges on keeping projects simple and constrained:
 
-*   **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
-*   **Max ~50 Files (Aim for ~10):** Limits overall scope.
-*   **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
+- **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
+- **Max ~50 Files (Aim for ~10):** Limits overall scope.
+- **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
 
-By adhering to these rules, the *entire* relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
+By adhering to these rules, the _entire_ relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
 
 ## Features
 
-*   **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `init`).
-*   **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
-*   **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS` in `src/config.ts`, defaults ~900k).
-*   **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
-*   **Flexible LLM Backend:** Configurable via environment variables to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
-*   **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
-*   **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
-*   **Easy Installation:** Shell script for Linux/macOS.
+- **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `init`).
+- **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
+- **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS` in `src/config.ts`, defaults ~900k).
+- **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
+- **Flexible LLM Backend:** Configurable via environment variables to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
+- **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
+- **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
+- **Easy Installation:** Shell script for Linux/macOS.
 
 ## Installation
 
@@ -972,7 +999,8 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
     # Or, if you prefer sudo explicitly:
     # curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
-    *Note: The script attempts to install without `sudo` first if installing to `/usr/local/bin`, but might prompt if permissions require it.*
+
+    _Note: The script attempts to install without `sudo` first if installing to `/usr/local/bin`, but might prompt if permissions require it._
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 4.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
@@ -1006,43 +1034,45 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 DAFC uses environment variables for configuration, typically loaded from a `.env` file in your project's root directory.
 
 1.  **API Key (Required):** DAFC needs an API key for an OpenAI-compatible service.
-    *   Get a key from your chosen provider (e.g., [OpenRouter](https://openrouter.ai/keys), [Featherless](https://console.featherless.ai/signin), [OpenAI](https://platform.openai.com/api-keys)).
-    *   Set it as an environment variable. The recommended way is to create a `.env` file in your **project's root directory**:
+    - Get a key from your chosen provider (e.g., [OpenRouter](https://openrouter.ai/keys), [Featherless](https://console.featherless.ai/signin), [OpenAI](https://platform.openai.com/api-keys)).
+    - Set it as an environment variable. The recommended way is to create a `.env` file in your **project's root directory**:
 
-        ```dotenv
-        # .env - Example for OpenRouter (Default)
-        OPENAI_API_KEY='your-openrouter-key-here'
+      ```dotenv
+      # .env - Example for OpenRouter (Default)
+      OPENROUTER_API_KEY='your-openrouter-key-here'
 
-        # --- Optional Overrides ---
+      # --- Optional Overrides ---
 
-        # Override the default model (defaults to google/gemini-1.5-pro-latest)
-        # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
+      # Override the default model (defaults to google/gemini-1.5-pro-latest)
+      # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
 
-        # Override the API endpoint (defaults to OpenRouter)
-        # OPENAI_API_BASE='https://openrouter.ai/api/v1'
-        ```
+      # Override the API endpoint (defaults to OpenRouter)
+      # OPENAI_API_BASE='https://openrouter.ai/api/v1'
+      ```
 
-        **Example for Featherless:**
-        ```dotenv
-        # .env - Example for Featherless
-        OPENAI_API_KEY='your-featherless-key-here'
-        OPENAI_MODEL='openai/deepseek-ai/DeepSeek-V3-0324' # Or other model supported by Featherless
-        OPENAI_API_BASE='https://api.featherless.ai/v1'
-        ```
+      **Example for Featherless:**
 
-        **Example for OpenAI:**
-         ```dotenv
-        # .env - Example for OpenAI
-        OPENAI_API_KEY='your-openai-key-here'
-        OPENAI_MODEL='gpt-4o' # Or other OpenAI model
-        OPENAI_API_BASE='https://api.openai.com/v1'
-        ```
+      ```dotenv
+      # .env - Example for Featherless
+      OPENROUTER_API_KEY='your-featherless-key-here'
+      OPENAI_MODEL='openai/deepseek-ai/DeepSeek-V3-0324' # Or other model supported by Featherless
+      OPENAI_API_BASE='https://api.featherless.ai/v1'
+      ```
 
-    *   Alternatively, export the variables in your shell: `export OPENAI_API_KEY='your-key-here'` etc.
+      **Example for OpenAI:**
+
+      ```dotenv
+      # .env - Example for OpenAI
+      OPENROUTER_API_KEY='your-openai-key-here'
+      OPENAI_MODEL='gpt-4o' # Or other OpenAI model
+      OPENAI_API_BASE='https://api.openai.com/v1'
+      ```
+
+    - Alternatively, export the variables in your shell: `export OPENROUTER_API_KEY='your-key-here'` etc.
 
 2.  **Initialize Project (Optional but Recommended):** Run `dafc init` in your project's root directory. This creates:
-    *   `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM. Useful for excluding large files, logs, or irrelevant build artifacts not covered by `.gitignore`.
-    *   `.dafcr`: Define custom system prompts or rules for the LLM. Edit this file to tailor the LLM's behavior (e.g., specify coding style, desired output format).
+    - `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM. Useful for excluding large files, logs, or irrelevant build artifacts not covered by `.gitignore`.
+    - `.dafcr`: Define custom system prompts or rules for the LLM. Edit this file to tailor the LLM's behavior (e.g., specify coding style, desired output format).
 
 ## Usage
 
@@ -1065,6 +1095,7 @@ dafc "Refactor the main function in cli.ts to be more modular."
 # Get help running the project
 dafc "What are the steps to run this project locally?"
 ```
+````
 
 The LLM response will be streamed to your terminal and saved completely in `response.md`. If the gathered context exceeds the configured limit (`MAX_CONTEXT_TOKENS`), the command will abort with an error before contacting the LLM.
 
@@ -1096,9 +1127,9 @@ dafc context --save --watch
 dafc context --save specific_context.txt --watch
 ```
 
-*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.md`.
-*   `--copy`: Copies the gathered context to the system clipboard.
-*   `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
+- `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.md`.
+- `--copy`: Copies the gathered context to the system clipboard.
+- `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
 
 **3. Initialize Config Files (`dafc init`)**
 
@@ -1111,17 +1142,16 @@ dafc init
 ## How It Works
 
 **`dafc ask "prompt"`:**
-    *   Reads `.env` for configuration (`OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`).
-    *   Reads `.gitignore` and `.dafcignore`.
-    *   Scans the current directory recursively for allowed file types.
-    *   Filters out ignored files/directories.
-    *   Reads file contents (skipping very large or empty files).
-    *   Estimates token count for each file and boilerplate text.
-    *   **Throws an error and aborts if `MAX_CONTEXT_TOKENS` is exceeded.**
-    *   Reads rules from `.dafcr` (if it exists).
-    *   Formats file contents and rules into a single context block.
-    *   Sends `[System Prompt from .dafcr (if any)] + [User Message (Context Block + User Prompt)]` to the configured LLM via the specified API endpoint.
-    *   Streams the response to `stdout` and saves the full response to `response.md`.
+_ Reads `.env` for configuration (`OPENROUTER_API_KEY`, `OPENAI_MODEL`, `OPENAI_API_BASE`).
+_ Reads `.gitignore` and `.dafcignore`.
+_ Scans the current directory recursively for allowed file types.
+_ Filters out ignored files/directories.
+_ Reads file contents (skipping very large or empty files).
+_ Estimates token count for each file and boilerplate text.
+_ **Throws an error and aborts if `MAX_CONTEXT_TOKENS` is exceeded.**
+_ Reads rules from `.dafcr` (if it exists).
+_ Formats file contents and rules into a single context block.
+_ Sends `[System Prompt from .dafcr (if any)] + [User Message (Context Block + User Prompt)]` to the configured LLM via the specified API endpoint. \* Streams the response to `stdout` and saves the full response to `response.md`.
 
 ## Contributing
 
@@ -1130,13 +1160,15 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 ## Disclaimer
 
 This tool sends your code (excluding ignored files) to external Large Language Models via the configured API endpoint.
-*   **Do not use this tool if your codebase contains sensitive information** (secrets, PII, etc.) that should not leave your environment. Standard security practices apply: keep secrets out of your code and use `.gitignore` / `.dafcignore` appropriately. Use a `.env` file for API keys and ensure it's listed in your ignore files.
-*   Use this tool responsibly and at your own risk. LLM outputs may contain errors or security vulnerabilities – **always review generated code carefully.**
+
+- **Do not use this tool if your codebase contains sensitive information** (secrets, PII, etc.) that should not leave your environment. Standard security practices apply: keep secrets out of your code and use `.gitignore` / `.dafcignore` appropriately. Use a `.env` file for API keys and ensure it's listed in your ignore files.
+- Use this tool responsibly and at your own risk. LLM outputs may contain errors or security vulnerabilities – **always review generated code carefully.**
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
-```
+
+````
 
 --- ./install.sh ---
 ```sh
@@ -1312,10 +1344,10 @@ if ! command_exists dafc; then
 fi
 
 echo ""
-echo "IMPORTANT: Remember to set your OPENAI_API_KEY environment variable!"
+echo "IMPORTANT: Remember to set your OPENROUTER_API_KEY environment variable!"
 echo "Create a .env file in your project directory or export it."
 echo "See README.md for details and examples for different LLM providers."
 echo ""
 
 exit 0
-```
+````

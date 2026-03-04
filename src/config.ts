@@ -31,10 +31,10 @@ function loadConfig() {
 
   const env = process.env;
 
-  const OPENAI_API_KEY =
-    env.OPENAI_API_KEY ||
-    projectConfig.OPENAI_API_KEY ||
-    globalConfig.OPENAI_API_KEY ||
+  const OPENROUTER_API_KEY =
+    env.OPENROUTER_API_KEY ||
+    projectConfig.OPENROUTER_API_KEY ||
+    globalConfig.OPENROUTER_API_KEY ||
     "";
 
   const OPENAI_MODEL =
@@ -53,10 +53,10 @@ function loadConfig() {
     env.TEMPERATURE ||
       projectConfig.TEMPERATURE ||
       globalConfig.TEMPERATURE ||
-      "0.7"
+      "0.7",
   );
 
-  return { OPENAI_API_KEY, OPENAI_MODEL, OPENAI_API_BASE, TEMPERATURE };
+  return { OPENROUTER_API_KEY, OPENAI_MODEL, OPENAI_API_BASE, TEMPERATURE };
 }
 
 export const config = loadConfig();

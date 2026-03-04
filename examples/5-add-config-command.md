@@ -15,6 +15,7 @@ bun add env-paths open @types/open
 Add the new dependencies.
 
 --- ./package.json ---
+
 ```json
 {
   "name": "@wagn/dafc",
@@ -46,12 +47,7 @@ Add the new dependencies.
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "files": [
-    "dafc",
-    "src/",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dafc", "src/", "LICENSE", "README.md"],
   "keywords": [
     "llm",
     "ai",
@@ -80,6 +76,7 @@ Add the new dependencies.
 Add functions to get configuration paths and open files in the editor.
 
 --- ./src/utils.ts ---
+
 ```ts
 import { readFile, writeFile, mkdir } from "fs/promises";
 import { join, dirname } from "path";
@@ -95,7 +92,7 @@ export async function sleep(ms: number): Promise<void> {
 }
 
 export async function readFileContent(
-  filePath: string
+  filePath: string,
 ): Promise<string | null> {
   try {
     return await readFile(filePath, "utf-8");
@@ -140,7 +137,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .gitignore
   const gitignoreContent = await readFileContent(
-    join(rootDir, config.GIT_IGNORE_FILE)
+    join(rootDir, config.GIT_IGNORE_FILE),
   );
   if (gitignoreContent) {
     ig.add(gitignoreContent);
@@ -148,7 +145,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .dafcignore
   const dafcignoreContent = await readFileContent(
-    join(rootDir, config.DAFC_IGNORE_FILE)
+    join(rootDir, config.DAFC_IGNORE_FILE),
   );
   if (dafcignoreContent) {
     ig.add(dafcignoreContent);
@@ -175,7 +172,7 @@ export function isAllowedExtension(filename: string): boolean {
     return false;
   }
   return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
-    pattern.test(filename)
+    pattern.test(filename),
   );
 }
 
@@ -197,7 +194,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
   return (...args: Parameters<T>) => {
@@ -224,12 +221,9 @@ export async function openFileInEditor(filePath: string): Promise<void> {
     await open(filePath);
   } catch (error: any) {
     console.error(`❌ Failed to open file in editor: ${error.message}`);
-    console.error(
-      `Please open the file manually: ${filePath}`
-    );
+    console.error(`Please open the file manually: ${filePath}`);
   }
 }
-
 ```
 
 **4. Update Configuration Loading (`src/config.ts`):**
@@ -237,6 +231,7 @@ export async function openFileInEditor(filePath: string): Promise<void> {
 Modify how configuration is loaded to layer global, project, and environment variables.
 
 --- ./src/config.ts ---
+
 ```ts
 import dotenv from "dotenv";
 import { readFileSync } from "fs";
@@ -283,13 +278,43 @@ const defaults = {
     "*.log",
   ]),
   DEFAULT_INCLUDE_PATTERNS: [
-    /\.ts$/, /\.tsx$/, /\.js$/, /\.jsx$/, /\.py$/, /\.rb$/, /\.php$/,
-    /\.go$/, /\.rs$/, /\.java$/, /\.cs$/, /\.html$/, /\.css$/, /\.scss$/,
-    /\.less$/, /\.json$/, /\.yaml$/, /\.yml$/, /\.md$/, /\.txt$/,
-    /Dockerfile$/, /docker-compose\.yml$/, /\.sql$/, /\.sh$/, /\.bash$/,
-    /Makefile$/, /^\.?env/, /^\.?config/, /^\.?rc$/, /package\.json$/,
-    /composer\.json$/, /Gemfile$/, /requirements\.txt$/, /go\.mod$/,
-    /Cargo\.toml$/, /pom\.xml$/, /csproj$/,
+    /\.ts$/,
+    /\.tsx$/,
+    /\.js$/,
+    /\.jsx$/,
+    /\.py$/,
+    /\.rb$/,
+    /\.php$/,
+    /\.go$/,
+    /\.rs$/,
+    /\.java$/,
+    /\.cs$/,
+    /\.html$/,
+    /\.css$/,
+    /\.scss$/,
+    /\.less$/,
+    /\.json$/,
+    /\.yaml$/,
+    /\.yml$/,
+    /\.md$/,
+    /\.txt$/,
+    /Dockerfile$/,
+    /docker-compose\.yml$/,
+    /\.sql$/,
+    /\.sh$/,
+    /\.bash$/,
+    /Makefile$/,
+    /^\.?env/,
+    /^\.?config/,
+    /^\.?rc$/,
+    /package\.json$/,
+    /composer\.json$/,
+    /Gemfile$/,
+    /requirements\.txt$/,
+    /go\.mod$/,
+    /Cargo\.toml$/,
+    /pom\.xml$/,
+    /csproj$/,
   ],
   MAX_FILE_SIZE_BYTES: 1 * 1024 * 1024, // 1MB
   // DAFC Constraints (Informational)
@@ -310,7 +335,7 @@ function loadConfig() {
   } catch (error: any) {
     if (error.code !== "ENOENT") {
       console.warn(
-        `Warning: Could not read global config file ${globalConfigPath}: ${error.message}`
+        `Warning: Could not read global config file ${globalConfigPath}: ${error.message}`,
       );
     }
     // else { console.debug("Global config file not found:", globalConfigPath); }
@@ -326,7 +351,7 @@ function loadConfig() {
   } catch (error: any) {
     if (error.code !== "ENOENT") {
       console.warn(
-        `Warning: Could not read project config file ${projectConfigPath}: ${error.message}`
+        `Warning: Could not read project config file ${projectConfigPath}: ${error.message}`,
       );
     }
     // else { console.debug("Project config file (.env) not found in:", process.cwd()); }
@@ -346,35 +371,35 @@ function loadConfig() {
       envVars.TEMPERATURE ||
         (projectConfig as any).TEMPERATURE ||
         (globalConfig as any).TEMPERATURE ||
-        String(defaults.TEMPERATURE)
+        String(defaults.TEMPERATURE),
     ),
     MAX_RETRIES: parseInt(
       envVars.MAX_RETRIES ||
         (projectConfig as any).MAX_RETRIES ||
         (globalConfig as any).MAX_RETRIES ||
         String(defaults.MAX_RETRIES),
-      10
+      10,
     ),
     BASE_DELAY: parseInt(
       envVars.BASE_DELAY ||
         (projectConfig as any).BASE_DELAY ||
         (globalConfig as any).BASE_DELAY ||
         String(defaults.BASE_DELAY),
-      10
+      10,
     ),
     MAX_CONTEXT_TOKENS: parseInt(
       envVars.MAX_CONTEXT_TOKENS ||
         (projectConfig as any).MAX_CONTEXT_TOKENS ||
         (globalConfig as any).MAX_CONTEXT_TOKENS ||
         String(defaults.MAX_CONTEXT_TOKENS),
-      10
+      10,
     ),
     MAX_FILE_SIZE_BYTES: parseInt(
       envVars.MAX_FILE_SIZE_BYTES ||
         (projectConfig as any).MAX_FILE_SIZE_BYTES ||
         (globalConfig as any).MAX_FILE_SIZE_BYTES ||
         String(defaults.MAX_FILE_SIZE_BYTES),
-      10
+      10,
     ),
     // Keep sets as sets
     DEFAULT_IGNORE_DIRS: defaults.DEFAULT_IGNORE_DIRS,
@@ -382,11 +407,11 @@ function loadConfig() {
     DEFAULT_INCLUDE_PATTERNS: defaults.DEFAULT_INCLUDE_PATTERNS,
   };
 
-  // Ensure OPENAI_API_KEY is present
-  if (!mergedConfig.OPENAI_API_KEY) {
-    console.error("❌ Error: OPENAI_API_KEY is not set.");
+  // Ensure OPENROUTER_API_KEY is present
+  if (!mergedConfig.OPENROUTER_API_KEY) {
+    console.error("❌ Error: OPENROUTER_API_KEY is not set.");
     console.error(
-      "  Please set it in your environment, project .env file, or global config file."
+      "  Please set it in your environment, project .env file, or global config file.",
     );
     console.error(`  Global config location: ${globalConfigPath}`);
     console.error("  Run 'dafc config --global' or 'dafc config' to edit.");
@@ -398,7 +423,6 @@ function loadConfig() {
 
 // --- Exported Config ---
 export const config = loadConfig();
-
 ```
 
 **5. Update CLI (`src/cli.ts`):**
@@ -406,6 +430,7 @@ export const config = loadConfig();
 Add the `config` command and its logic.
 
 --- ./src/cli.ts ---
+
 ```ts
 #!/usr/bin/env bun
 import { Command, Option } from "commander";
@@ -434,7 +459,7 @@ program
   .name("dafc")
   .version(pkg.version)
   .description(
-    "DAFC CLI - Interact with LLMs using your entire codebase as context."
+    "DAFC CLI - Interact with LLMs using your entire codebase as context.",
   );
 
 // --- Ask Command ---
@@ -450,10 +475,17 @@ program
     if (opts.debug) {
       console.log("\nResolved Config (Env > Project > Global > Defaults):");
       // Avoid logging sensitive keys directly if possible, maybe redact API key
-      const safeConfig = { ...config, OPENAI_API_KEY: config.OPENAI_API_KEY ? '***' : 'Not Set' };
-      console.log(JSON.stringify(safeConfig, (key, value) =>
-        value instanceof Set ? Array.from(value) : value, // Convert Sets for JSON
-      2));
+      const safeConfig = {
+        ...config,
+        OPENROUTER_API_KEY: config.OPENROUTER_API_KEY ? "***" : "Not Set",
+      };
+      console.log(
+        JSON.stringify(
+          safeConfig,
+          (key, value) => (value instanceof Set ? Array.from(value) : value), // Convert Sets for JSON
+          2,
+        ),
+      );
       console.log("--------------------------\n");
     }
 
@@ -464,7 +496,7 @@ program
 
       if (files.length === 0) {
         console.warn(
-          "⚠️ Warning: No files were included in the context. Check include patterns and ignore files (.gitignore, .dafcignore)."
+          "⚠️ Warning: No files were included in the context. Check include patterns and ignore files (.gitignore, .dafcignore).",
         );
       }
 
@@ -490,12 +522,12 @@ program
   .addOption(
     new Option(
       "-s, --save [outputFile]",
-      "Save context to a file (default: context.md)"
-    ).argParser((value) => value || "context.md")
+      "Save context to a file (default: context.md)",
+    ).argParser((value) => value || "context.md"),
   )
   .option(
     "-w, --watch",
-    "Watch for file changes and update the saved context file (requires --save)"
+    "Watch for file changes and update the saved context file (requires --save)",
   )
   .option("--copy", "Copy the context to the clipboard") // Changed short flag to avoid conflict
   .action(async (opts: { save?: string; watch?: boolean; copy?: boolean }) => {
@@ -503,7 +535,7 @@ program
     console.log("Gathering context...");
 
     const performGatherAndOutput = async (
-      isInitialRun = true
+      isInitialRun = true,
     ): Promise<string | null> => {
       try {
         const ig = await createIgnoreFilter(rootDir);
@@ -511,7 +543,7 @@ program
 
         if (files.length === 0 && isInitialRun) {
           console.warn(
-            "⚠️ Warning: No files were included in the context. Check include patterns and ignore files (.gitignore, .dafcignore)."
+            "⚠️ Warning: No files were included in the context. Check include patterns and ignore files (.gitignore, .dafcignore).",
           );
         }
 
@@ -522,7 +554,7 @@ program
             console.log(`✅ Context saved to ${savePath}`);
           } else {
             console.log(
-              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`
+              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`,
             );
           }
         }
@@ -554,7 +586,7 @@ program
     if (opts.watch) {
       if (!opts.save) {
         console.error(
-          "❌ Error: --watch requires --save to specify an output file."
+          "❌ Error: --watch requires --save to specify an output file.",
         );
         process.exit(1);
       }
@@ -564,7 +596,7 @@ program
 
       const debouncedRegenerate = debounce(
         () => performGatherAndOutput(false),
-        500
+        500,
       );
 
       try {
@@ -612,7 +644,7 @@ program
 
 # --- Required ---
 # Your API key for the LLM service
-# OPENAI_API_KEY=your-api-key-here
+# OPENROUTER_API_KEY=your-api-key-here
 
 # --- Optional Overrides ---
 # Specify the model to use (default: ${config.MODEL_NAME})
@@ -646,7 +678,6 @@ program
 
       // Open in editor
       await openFileInEditor(configPath);
-
     } catch (error: any) {
       console.error(`\n❌ Error managing config file: ${error.message}`);
       process.exit(1);
@@ -657,7 +688,7 @@ program
 program
   .command("init")
   .description(
-    "Initialize DAFC helper files (.dafcignore, .dafcr) in the current directory."
+    "Initialize DAFC helper files (.dafcignore, .dafcr) in the current directory.",
   )
   .action(async () => {
     const rootDir = process.cwd();
@@ -754,7 +785,6 @@ if (
 }
 
 program.parse(process.argv);
-
 ```
 
 **6. Update `README.md`:**
@@ -762,14 +792,14 @@ program.parse(process.argv);
 Add documentation for the new `config` command.
 
 --- ./README.md ---
-```md
+
+````md
 # DAFC (The Fuck?) CLI - Dumb as Fuck Coding Tool
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://badge.fury.io/js/%40wagn%2Fdafc.svg)](https://badge.fury.io/js/%40wagn%2Fdafc)
 
-
-**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 1.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
+**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 1.5 Pro. Instead of complex context management, DAFC lets you easily dump your _entire_ (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
 **Read the full philosophy and background in the [introductory blog post](https://avisantoso.com/gemini-and-context-windows).**
 
@@ -777,24 +807,24 @@ Add documentation for the new `config` command.
 
 The "Dumb as Fuck Coding" methodology hinges on keeping projects simple and constrained:
 
-*   **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
-*   **Max ~50 Files (Aim for ~10):** Limits overall scope.
-*   **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
+- **Max ~500 Lines Per File (Aim for ~300):** Keeps individual units manageable.
+- **Max ~50 Files (Aim for ~10):** Limits overall scope.
+- **Max ~5 Database Tables (Aim for 3):** Simplifies the data model. NOTE: Does not include users table.
 
-By adhering to these rules, the *entire* relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
+By adhering to these rules, the _entire_ relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context, checks if it exceeds a configured limit, and interacts with the LLM.
 
 ## Features
 
-*   **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `config`, `init`).
-*   **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
-*   **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS`).
-*   **Layered Configuration:** Uses global (`~/.config/dafc/config.env`), project (`./.env`), and environment variables for flexible settings (Env > Project > Global).
-*   **Easy Config Editing:** `dafc config` command to open config files in your default editor.
-*   **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
-*   **Flexible LLM Backend:** Configurable via config files/env vars to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, Google AI Studio, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
-*   **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
-*   **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
-*   **Easy Installation:** Shell script, package managers (npm, yarn, bun).
+- **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `config`, `init`).
+- **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
+- **Context Limit Check:** Estimates token count and throws an error if it exceeds the configured maximum (`MAX_CONTEXT_TOKENS`).
+- **Layered Configuration:** Uses global (`~/.config/dafc/config.env`), project (`./.env`), and environment variables for flexible settings (Env > Project > Global).
+- **Easy Config Editing:** `dafc config` command to open config files in your default editor.
+- **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
+- **Flexible LLM Backend:** Configurable via config files/env vars to use any OpenAI-compatible API (OpenRouter, Featherless, OpenAI, Google AI Studio, etc.). Defaults to OpenRouter with `google/gemini-1.5-pro-latest`.
+- **LLM Interaction:** Sends context + prompt to the configured LLM. Includes streaming output and retries.
+- **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
+- **Easy Installation:** Shell script, package managers (npm, yarn, bun).
 
 ## Installation
 
@@ -802,11 +832,13 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 
 1.  Make sure you have **Bun** ([install instructions](https://bun.sh/docs/installation)) and **Git** installed.
 2.  Run the following command in your terminal. Installs to `/usr/local/bin` by default:
+
     ```bash
     curl -fsSL https://raw.githubusercontent.com/AviSantoso/dafc/main/install.sh | sudo bash
     ```
-    *   **NOTE:** Uses `sudo` for default install location. Review the script if needed.
-    *   Alternatively, modify the `INSTALL_DIR` variable in the script before running, or install via package manager.
+
+    - **NOTE:** Uses `sudo` for default install location. Review the script if needed.
+    - Alternatively, modify the `INSTALL_DIR` variable in the script before running, or install via package manager.
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 4.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
@@ -815,6 +847,7 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 ### Using NPM/Yarn/Bun Package Managers
 
 1.  Install globally with your preferred package manager:
+
     ```bash
     # Using npm
     npm install -g @wagn/dafc
@@ -859,51 +892,56 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
 DAFC uses a layered configuration system:
 
 1.  **Environment Variables (Highest Priority):** Any setting prefixed with `OPENAI_` or other config keys (e.g., `TEMPERATURE`, `MAX_CONTEXT_TOKENS`) set in your shell environment will override all other settings.
+
     ```bash
-    export OPENAI_API_KEY='your-key-here'
+    export OPENROUTER_API_KEY='your-key-here'
     export OPENAI_MODEL='anthropic/claude-3.5-sonnet'
     ```
 
 2.  **Project `.env` File (Medium Priority):** Create a `.env` file in your project's root directory. Settings here override the global config. This is the recommended place for project-specific LLM choices or API keys.
+
     ```dotenv
     # .env (in your project root)
-    OPENAI_API_KEY='project-specific-key-maybe'
+    OPENROUTER_API_KEY='project-specific-key-maybe'
     OPENAI_MODEL='openai/gpt-4o'
     ```
-    *   Use `dafc config` to easily create or edit this file.
+
+    - Use `dafc config` to easily create or edit this file.
 
 3.  **Global Config File (Lowest Priority):** A global file stores default settings for all projects. Located at:
-    *   Linux/macOS: `~/.config/dafc/config.env`
-    *   Windows: `%APPDATA%\dafc\Config\config.env` (e.g., `C:\Users\YourUser\AppData\Roaming\dafc\Config\config.env`)
+    - Linux/macOS: `~/.config/dafc/config.env`
+    - Windows: `%APPDATA%\dafc\Config\config.env` (e.g., `C:\Users\YourUser\AppData\Roaming\dafc\Config\config.env`)
     ```dotenv
     # ~/.config/dafc/config.env (Example)
-    OPENAI_API_KEY='your-default-openrouter-key'
+    OPENROUTER_API_KEY='your-default-openrouter-key'
     OPENAI_MODEL='google/gemini-1.5-pro-latest'
     OPENAI_API_BASE='https://openrouter.ai/api/v1'
     ```
-    *   Use `dafc config --global` to easily create or edit this file.
+
+    - Use `dafc config --global` to easily create or edit this file.
 
 **Key Configuration Variables:**
 
-*   `OPENAI_API_KEY` (Required): Your API key for the chosen service.
-*   `OPENAI_MODEL`: The specific LLM model identifier (e.g., `google/gemini-1.5-pro-latest`, `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`).
-*   `OPENAI_API_BASE`: The base URL for the LLM API endpoint (e.g., `https://openrouter.ai/api/v1`, `https://api.openai.com/v1`, `https://api.featherless.ai/v1`).
-*   `TEMPERATURE`: LLM creativity/randomness (0.0-2.0).
-*   `MAX_CONTEXT_TOKENS`: Safety limit for context size (default ~900k).
-*   `MAX_FILE_SIZE_BYTES`: Skip files larger than this (default 1MB).
+- `OPENROUTER_API_KEY` (Required): Your API key for the chosen service.
+- `OPENAI_MODEL`: The specific LLM model identifier (e.g., `google/gemini-1.5-pro-latest`, `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`).
+- `OPENAI_API_BASE`: The base URL for the LLM API endpoint (e.g., `https://openrouter.ai/api/v1`, `https://api.openai.com/v1`, `https://api.featherless.ai/v1`).
+- `TEMPERATURE`: LLM creativity/randomness (0.0-2.0).
+- `MAX_CONTEXT_TOKENS`: Safety limit for context size (default ~900k).
+- `MAX_FILE_SIZE_BYTES`: Skip files larger than this (default 1MB).
 
 **Example Setups:**
 
-*   **OpenRouter (Default):** Set `OPENAI_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
-*   **OpenAI:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
-*   **Featherless:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
-*   **Google AI Studio:** Set `OPENAI_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. *Note: Google's API might require specific formatting or headers not fully tested.*
+- **OpenRouter (Default):** Set `OPENROUTER_API_KEY` in global or project config. `OPENAI_API_BASE` defaults to OpenRouter. Choose a model via `OPENAI_MODEL`.
+- **OpenAI:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `gpt-4o`), and `OPENAI_API_BASE='https://api.openai.com/v1'`.
+- **Featherless:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `openai/deepseek-ai/DeepSeek-V3-0324`), and `OPENAI_API_BASE='https://api.featherless.ai/v1'`.
+- **Google AI Studio:** Set `OPENROUTER_API_KEY`, `OPENAI_MODEL` (e.g., `gemini-1.5-pro-latest`), and `OPENAI_API_BASE='https://generativelanguage.googleapis.com/v1beta'`. _Note: Google's API might require specific formatting or headers not fully tested._
 
 **Initialize Helper Files:**
 
 Run `dafc init` in your project's root directory. This creates:
-*   `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
-*   `.dafcr`: Define custom system prompts or rules for the LLM.
+
+- `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
+- `.dafcr`: Define custom system prompts or rules for the LLM.
 
 ## Usage
 
@@ -926,6 +964,7 @@ dafc a "Refactor the main function in cli.ts to be more modular." # Using alias
 # Get help running the project
 dafc "What are the steps to run this project locally?"
 ```
+````
 
 Response streams to terminal, saved to `response.md`. Aborts if `MAX_CONTEXT_TOKENS` exceeded. Use `--debug` to see resolved config.
 
@@ -957,9 +996,9 @@ dafc context --save --watch
 dafc context -s specific_context.txt -w
 ```
 
-*   `-s, --save [filename]`: Saves context. Defaults to `context.md` if no filename given.
-*   `--copy`: Copies context to clipboard.
-*   `-w, --watch`: Requires `--save`. Monitors project and updates saved file on changes.
+- `-s, --save [filename]`: Saves context. Defaults to `context.md` if no filename given.
+- `--copy`: Copies context to clipboard.
+- `-w, --watch`: Requires `--save`. Monitors project and updates saved file on changes.
 
 **3. Edit Configuration (`dafc config`)**
 
@@ -1004,13 +1043,15 @@ Contributions welcome! Please submit pull requests or open issues.
 ## Disclaimer
 
 This tool sends your code (excluding ignored files) to external LLMs.
-*   **Do not use with sensitive codebases.** Keep secrets out of code, use ignore files, and manage API keys securely.
-*   Use at your own risk. **Always review LLM-generated code carefully.**
+
+- **Do not use with sensitive codebases.** Keep secrets out of code, use ignore files, and manage API keys securely.
+- Use at your own risk. **Always review LLM-generated code carefully.**
 
 ## License
 
 MIT License - see [LICENSE](LICENSE.md).
-```
+
+````
 
 **7. Build and Test:**
 
@@ -1029,3 +1070,4 @@ MIT License - see [LICENSE](LICENSE.md).
     *   Run `./dafc ask "test" --debug` again and verify the environment variable takes precedence.
 
 You now have a layered configuration system and commands to easily edit the global and project configuration files.
+````

@@ -18,10 +18,10 @@ async function main() {
     process.exit(1);
   }
 
-  if (!config.OPENAI_API_KEY) {
-    console.error("Error: OPENAI_API_KEY is not set.");
+  if (!config.OPENROUTER_API_KEY) {
+    console.error("Error: OPENROUTER_API_KEY is not set.");
     console.error(
-      "Set it in your environment or in a .env file in the current directory."
+      "Set it in your environment or in a .env file in the current directory.",
     );
     process.exit(1);
   }
@@ -43,7 +43,7 @@ async function main() {
   let updater: ((context: string, fileCount: number) => void) | null = null;
 
   const registerUpdater = (
-    fn: (context: string, fileCount: number) => void
+    fn: (context: string, fileCount: number) => void,
   ) => {
     updater = fn;
   };
@@ -67,7 +67,7 @@ async function main() {
       initialMessages: messages,
       cwd,
       registerUpdater,
-    })
+    }),
   );
 
   await waitUntilExit();
