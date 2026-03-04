@@ -275,20 +275,21 @@ export function App({
       )}
 
       <Box marginTop={1}>
-        <Text bold>dafc</Text>
-        <Text dimColor> — watching </Text>
-        <Text color="cyan">{fileCount} files</Text>
-        <Text dimColor>  {formatTokens(tokenCount)} tokens</Text>
-        <Text dimColor>  {patterns.join(" ")}</Text>
-        {contextUpdated && <Text color="yellow">  [context updated]</Text>}
+        <Text color="green" bold>{">"} </Text>
+        <Text>{inputText}</Text>
+        {!isStreaming && <Text color="green">█</Text>}
       </Box>
 
       <Box>
-        <Text color="green" bold>
-          {">"}{" "}
-        </Text>
-        <Text>{inputText}</Text>
-        {!isStreaming && <Text color="green">█</Text>}
+        <Text bold>dafc</Text>
+        <Text dimColor> {fileCount} files  {formatTokens(tokenCount)} tokens</Text>
+        {contextUpdated && <Text color="yellow">  [context updated]</Text>}
+      </Box>
+
+      <Box flexDirection="column">
+        {patterns.map((p, i) => (
+          <Text key={i} dimColor>{"  "}{p}</Text>
+        ))}
       </Box>
     </Box>
   );
