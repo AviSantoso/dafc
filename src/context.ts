@@ -33,7 +33,7 @@ export async function buildIgnoreFilter(
   const dafcignoreLines = await readLines(join(cwd, ".dafcignore"));
   if (dafcignoreLines.length) ig.add(dafcignoreLines);
 
-  return (file: string) => !ig.ignores(file);
+  return (file: string) => !ig.ignores(file.replace(/^\.\//, ""));
 }
 
 export async function resolveGlobs(
