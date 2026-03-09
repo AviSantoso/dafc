@@ -7,7 +7,7 @@
     "dafc": "./dafc"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts --compile --outfile dafc --external react-devtools-core",
+    "build": "bun build ./src/cli.ts --compile --outfile dafc",
     "dev": "bun run ./src/cli.ts",
     "prepublishOnly": "bun run build"
   },
