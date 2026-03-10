@@ -2,7 +2,7 @@ import chokidar, { type FSWatcher } from "chokidar";
 
 function debounce<T extends (...args: unknown[]) => void>(
   fn: T,
-  ms: number
+  ms: number,
 ): T {
   let timer: ReturnType<typeof setTimeout> | null = null;
   return ((...args: unknown[]) => {
@@ -18,7 +18,7 @@ export function watchGlobs(
   patterns: string[],
   cwd: string,
   onChange: () => void,
-  ignorePatterns: string[]
+  ignorePatterns: string[],
 ): FSWatcher {
   const debouncedChange = debounce(onChange, 300);
 

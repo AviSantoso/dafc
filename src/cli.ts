@@ -1,20 +1,39 @@
 import React from "react";
 import { render } from "ink";
 import { config } from "./config.js";
-import { resolveGlobs, buildContext, estimateTokens, buildIgnoreFilter } from "./context.js";
+import {
+  resolveGlobs,
+  buildContext,
+  estimateTokens,
+  buildIgnoreFilter,
+} from "./context.js";
 import { watchGlobs } from "./watcher.js";
 import { App } from "./ui.js";
 import type { Message } from "./llm.js";
 
-const SYSTEM_PROMPT = `You are an expert software assistant helping the user explore and understand their codebase.
-Reply concisely and clearly. Always reference specific files and line numbers when relevant.`;
+const SYSTEM_PROMPT = `
+<persona>
+You are an expert software assistant helping the user explore and understand their codebase.
+You have a deep understanding of codebases and common architectural patterns.
+Act like a guide to the user's codebase.
+</persona>
+<task>
+You are tasked with helping the user explore and understand their codebase in a consultative manner.
+The user is attempting to understand the codebase from a functional and high level point of view.
+</task>
+<rules>
+- Reply concisely and clearly.
+- Respond using plaintext / minimally formatted markdown.
+- Always reference specific files and line numbers when relevant.
+- Do not suggest implementation details unless the user has explicitly asked for them.
+</rules>`;
 
 async function main() {
   const allArgs = process.argv.slice(2);
   const ignoreGitignore = allArgs.includes("--ignore-gitignore");
   const debug = allArgs.includes("--debug");
   const patterns = allArgs.filter(
-    (p) => p !== "--ignore-gitignore" && p !== "--debug"
+    (p) => p !== "--ignore-gitignore" && p !== "--debug",
   );
 
   if (patterns.length === 0) {
@@ -54,7 +73,9 @@ async function main() {
     },
   ];
 
-  let updater: ((context: string, fileCount: number, tokenCount: number) => void) | null = null;
+  let updater:
+    | ((context: string, fileCount: number, tokenCount: number) => void)
+    | null = null;
 
   const registerUpdater = (
     fn: (context: string, fileCount: number, tokenCount: number) => void,
@@ -65,18 +86,23 @@ async function main() {
   // chokidar still needs basic glob ignores; the filter handles gitignore semantics
   const watcherIgnore = ["**/node_modules/**", "**/.git/**"];
 
-  const watcher = watchGlobs(patterns, cwd, async () => {
-    try {
-      const newFiles = await resolveGlobs(patterns, cwd, filter);
-      const newContext = await buildContext(newFiles, cwd);
-      const newTokenCount = estimateTokens(newContext);
-      if (updater) {
-        updater(newContext, newFiles.length, newTokenCount);
+  const watcher = watchGlobs(
+    patterns,
+    cwd,
+    async () => {
+      try {
+        const newFiles = await resolveGlobs(patterns, cwd, filter);
+        const newContext = await buildContext(newFiles, cwd);
+        const newTokenCount = estimateTokens(newContext);
+        if (updater) {
+          updater(newContext, newFiles.length, newTokenCount);
+        }
+      } catch {
+        // swallow watch errors silently
       }
-    } catch {
-      // swallow watch errors silently
-    }
-  }, watcherIgnore);
+    },
+    watcherIgnore,
+  );
 
   const { waitUntilExit } = render(
     React.createElement(App, {

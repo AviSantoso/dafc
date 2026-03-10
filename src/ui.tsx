@@ -13,7 +13,7 @@ interface ChatMessage {
 
 function formatConversationMarkdown(
   patterns: string[],
-  messages: ChatMessage[]
+  messages: ChatMessage[],
 ): string {
   const date = new Date().toLocaleString();
   const lines: string[] = [
@@ -50,7 +50,7 @@ export interface AppProps {
   initialContext: string;
   cwd: string;
   registerUpdater: (
-    fn: (context: string, fileCount: number, tokenCount: number) => void
+    fn: (context: string, fileCount: number, tokenCount: number) => void,
   ) => void;
 }
 
@@ -66,7 +66,7 @@ export function App({
   const { exit } = useApp();
   const messagesRef = useRef<Message[]>(initialMessages);
   const lastAssistantRef = useRef(
-    "I'm ready to help you explore this codebase."
+    "I'm ready to help you explore this codebase.",
   );
   const contextRef = useRef(initialContext);
 
@@ -143,10 +143,7 @@ export function App({
           .slice(0, 19);
         const filename = `dafc_${timestamp}.md`;
         const filepath = join(cwd, filename);
-        const md = formatConversationMarkdown(
-          patterns,
-          staticMessages
-        );
+        const md = formatConversationMarkdown(patterns, staticMessages);
         writeFile(filepath, md, "utf-8")
           .then(() => {
             setStaticMessages((prev) => [
@@ -275,20 +272,28 @@ export function App({
       )}
 
       <Box marginTop={1}>
-        <Text color="green" bold>{">"} </Text>
+        <Text color="green" bold>
+          {">"}{" "}
+        </Text>
         <Text>{inputText}</Text>
         {!isStreaming && <Text color="green">█</Text>}
       </Box>
 
       <Box>
         <Text bold>dafc</Text>
-        <Text dimColor> {fileCount} files  {formatTokens(tokenCount)} tokens</Text>
-        {contextUpdated && <Text color="yellow">  [context updated]</Text>}
+        <Text dimColor>
+          {" "}
+          {fileCount} files {formatTokens(tokenCount)} tokens
+        </Text>
+        {contextUpdated && <Text color="yellow"> [context updated]</Text>}
       </Box>
 
       <Box flexDirection="column">
         {patterns.map((p, i) => (
-          <Text key={i} dimColor>{"  "}{p}</Text>
+          <Text key={i} dimColor>
+            {"  "}
+            {p}
+          </Text>
         ))}
       </Box>
     </Box>

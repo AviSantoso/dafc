@@ -5,9 +5,9 @@ Here's the plan:
 1.  **Merge Core Logic:** Combine the context gathering (`get_context.ts`) and LLM interaction (`llm.ts`) into a single flow triggered by the main command.
 2.  **Implement `.dafcignore`:** Add support for this file alongside `.gitignore`.
 3.  **Create CLI Structure:** Use a library like `commander` (or Bun's built-in features if sufficient) to create three main commands:
-    *   `dafc ask "<prompt>"`: Gathers context, includes `.dafcr` rules, sends prompt + context to LLM, streams output, saves to `response.md`. This is the primary command.
-    *   `dafc context`: Gathers and prints the context (including `.dafcr`) to the console. Useful for debugging what the LLM sees.
-    *   `dafc init`: Creates default `.dafcr` and `.dafcignore` files in the current directory to help users get started.
+    - `dafc ask "<prompt>"`: Gathers context, includes `.dafcr` rules, sends prompt + context to LLM, streams output, saves to `response.md`. This is the primary command.
+    - `dafc context`: Gathers and prints the context (including `.dafcr`) to the console. Useful for debugging what the LLM sees.
+    - `dafc init`: Creates default `.dafcr` and `.dafcignore` files in the current directory to help users get started.
 4.  **Refactor Code:** Organize the code into logical modules (e.g., `context.ts`, `llm.ts`, `cli.ts`).
 5.  **Installation Script:** Create an `install.sh` script for easy installation on Linux/macOS.
 6.  **GitHub Actions:** Set up a basic GitHub Actions workflow to build binaries on release tags.
@@ -20,6 +20,7 @@ Here are the proposed file changes and new files:
 We need dependencies for CLI argument parsing (`commander`) and handling ignore files (`ignore`). We'll also add a `bin` entry to tell npm/bun how to link the `dafc` command.
 
 --- ./package.json ---
+
 ```json
 {
   "name": "dafc-cli",
@@ -47,12 +48,7 @@ We need dependencies for CLI argument parsing (`commander`) and handling ignore 
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "files": [
-    "dafc",
-    "src/",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dafc", "src/", "LICENSE", "README.md"],
   "keywords": [
     "llm",
     "ai",
@@ -76,34 +72,37 @@ We need dependencies for CLI argument parsing (`commander`) and handling ignore 
 }
 ```
 
-*Action:* Replace `[YOUR_REPO_URL_HERE]`, `[YOUR_NAME_OR_ORG]` placeholders.
+_Action:_ Replace `[YOUR_REPO_URL_HERE]`, `[YOUR_NAME_OR_ORG]` placeholders.
 
 **2. Create `src/` directory and move/refactor code**
 
 Let's organize the source files.
 
-*   Move `llm.ts` to `src/llm.ts`
-*   Move `get_context.ts` to `src/context.ts`
-*   Create `src/cli.ts` as the main entry point.
-*   Create `src/config.ts` for constants.
-*   Create `src/utils.ts` for helper functions.
+- Move `llm.ts` to `src/llm.ts`
+- Move `get_context.ts` to `src/context.ts`
+- Create `src/cli.ts` as the main entry point.
+- Create `src/config.ts` for constants.
+- Create `src/utils.ts` for helper functions.
 
 **3. New File: `src/config.ts`**
 
 --- ./src/config.ts ---
+
 ```typescript
 import dotenv from "dotenv";
 
 // Load .env file from current working directory or project root
-dotenv.config({ path: process.cwd() + '/.env', override: true });
+dotenv.config({ path: process.cwd() + "/.env", override: true });
 dotenv.config({ override: true }); // Load default .env if specific one not found
 
 export const config = {
   // LLM Settings
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || "",
-  MODEL_NAME: process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
+  MODEL_NAME:
+    process.env.OPENAI_MODEL || "google/gemini-2.5-pro-exp-03-25:free", // Allow overriding model via env
   API_BASE_URL: "https://openrouter.ai/api/v1",
-  API_REFERER: process.env.DAFC_REFERER || "https://github.com/your-repo/dafc-cli", // CHANGE THIS
+  API_REFERER:
+    process.env.DAFC_REFERER || "https://github.com/your-repo/dafc-cli", // CHANGE THIS
   API_TITLE: "DAFC CLI",
   TEMPERATURE: 0.3,
   MAX_RETRIES: 3,
@@ -114,21 +113,55 @@ export const config = {
   DAFC_IGNORE_FILE: ".dafcignore",
   DAFC_RULES_FILE: ".dafcr",
   GIT_IGNORE_FILE: ".gitignore",
-  DEFAULT_IGNORE_DIRS: new Set(['.git', 'node_modules', 'dist', 'build', '.next', 'out', 'coverage']),
-  DEFAULT_IGNORE_FILES: new Set(['.DS_Store', 'response.md', '.env']), // Add context.txt if you keep it
+  DEFAULT_IGNORE_DIRS: new Set([
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "out",
+    "coverage",
+  ]),
+  DEFAULT_IGNORE_FILES: new Set([".DS_Store", "response.md", ".env"]), // Add context.txt if you keep it
   // Add file extensions you want to include by default
   DEFAULT_INCLUDE_PATTERNS: [
-    /\.ts$/, /\.tsx$/, /\.js$/, /\.jsx$/,
-    /\.py$/, /\.rb$/, /\.php$/, /\.go$/, /\.rs$/, /\.java$/, /\.cs$/,
-    /\.html$/, /\.css$/, /\.scss$/, /\.less$/,
-    /\.json$/, /\.yaml$/, /\.yml$/,
-    /\.md$/, /\.txt$/,
-    /Dockerfile$/, /docker-compose\.yml$/,
+    /\.ts$/,
+    /\.tsx$/,
+    /\.js$/,
+    /\.jsx$/,
+    /\.py$/,
+    /\.rb$/,
+    /\.php$/,
+    /\.go$/,
+    /\.rs$/,
+    /\.java$/,
+    /\.cs$/,
+    /\.html$/,
+    /\.css$/,
+    /\.scss$/,
+    /\.less$/,
+    /\.json$/,
+    /\.yaml$/,
+    /\.yml$/,
+    /\.md$/,
+    /\.txt$/,
+    /Dockerfile$/,
+    /docker-compose\.yml$/,
     /\.sql$/,
-    /\.sh$/, /\.bash$/,
+    /\.sh$/,
+    /\.bash$/,
     /Makefile$/,
-    /^\.?env/, /^\.?config/, /^\.?rc$/, // Config files like .env, .eslintrc
-    /package\.json$/, /composer\.json$/, /Gemfile$/, /requirements\.txt$/, /go\.mod$/, /Cargo\.toml$/, /pom\.xml$/, /csproj$/ // Dependency files
+    /^\.?env/,
+    /^\.?config/,
+    /^\.?rc$/, // Config files like .env, .eslintrc
+    /package\.json$/,
+    /composer\.json$/,
+    /Gemfile$/,
+    /requirements\.txt$/,
+    /go\.mod$/,
+    /Cargo\.toml$/,
+    /pom\.xml$/,
+    /csproj$/, // Dependency files
   ],
   MAX_FILE_SIZE_BYTES: 1 * 1024 * 1024, // 1MB limit per file to avoid huge blobs
 
@@ -149,26 +182,30 @@ if (!config.OPENROUTER_API_KEY) {
   process.exit(1);
 }
 ```
-*Action:* Update `API_REFERER` with your actual repository URL.
+
+_Action:_ Update `API_REFERER` with your actual repository URL.
 
 **4. New File: `src/utils.ts`**
 
 --- ./src/utils.ts ---
+
 ```typescript
 import { readFile } from "fs/promises";
 import { join } from "path";
-import ignore, { Ignore } from 'ignore';
-import { config } from './config';
+import ignore, { Ignore } from "ignore";
+import { config } from "./config";
 
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function readFileContent(filePath: string): Promise<string | null> {
+export async function readFileContent(
+  filePath: string,
+): Promise<string | null> {
   try {
     return await readFile(filePath, "utf-8");
   } catch (error: any) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       return null; // File not found is okay
     }
     console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
@@ -177,61 +214,75 @@ export async function readFileContent(filePath: string): Promise<string | null> 
 }
 
 export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
-    const ig = ignore();
+  const ig = ignore();
 
-    // Add default directory ignores
-    config.DEFAULT_IGNORE_DIRS.forEach(dir => ig.add(dir + '/'));
-    // Add default file ignores
-    config.DEFAULT_IGNORE_FILES.forEach(file => ig.add(file));
+  // Add default directory ignores
+  config.DEFAULT_IGNORE_DIRS.forEach((dir) => ig.add(dir + "/"));
+  // Add default file ignores
+  config.DEFAULT_IGNORE_FILES.forEach((file) => ig.add(file));
 
-    // Load .gitignore
-    const gitignoreContent = await readFileContent(join(rootDir, config.GIT_IGNORE_FILE));
-    if (gitignoreContent) {
-        ig.add(gitignoreContent);
-        // console.debug("Loaded .gitignore rules");
-    }
+  // Load .gitignore
+  const gitignoreContent = await readFileContent(
+    join(rootDir, config.GIT_IGNORE_FILE),
+  );
+  if (gitignoreContent) {
+    ig.add(gitignoreContent);
+    // console.debug("Loaded .gitignore rules");
+  }
 
-    // Load .dafcignore
-    const dafcignoreContent = await readFileContent(join(rootDir, config.DAFC_IGNORE_FILE));
-    if (dafcignoreContent) {
-        ig.add(dafcignoreContent);
-        // console.debug("Loaded .dafcignore rules");
-    }
+  // Load .dafcignore
+  const dafcignoreContent = await readFileContent(
+    join(rootDir, config.DAFC_IGNORE_FILE),
+  );
+  if (dafcignoreContent) {
+    ig.add(dafcignoreContent);
+    // console.debug("Loaded .dafcignore rules");
+  }
 
-    return ig;
+  return ig;
 }
 
 export function isAllowedPath(relativePath: string, ig: Ignore): boolean {
-    // Normalize path for ignore matching (relative, no leading slash)
-    const normalizedPath = relativePath.startsWith('/') ? relativePath.substring(1) : relativePath;
-    const isIgnored = ig.ignores(normalizedPath);
-    // if (isIgnored) console.debug(`Ignoring: ${normalizedPath}`);
-    return !isIgnored;
+  // Normalize path for ignore matching (relative, no leading slash)
+  const normalizedPath = relativePath.startsWith("/")
+    ? relativePath.substring(1)
+    : relativePath;
+  const isIgnored = ig.ignores(normalizedPath);
+  // if (isIgnored) console.debug(`Ignoring: ${normalizedPath}`);
+  return !isIgnored;
 }
 
 export function isAllowedExtension(filename: string): boolean {
-    return config.DEFAULT_INCLUDE_PATTERNS.some(pattern => pattern.test(filename));
+  return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
+    pattern.test(filename),
+  );
 }
 
 export function formatBytes(bytes: number, decimals = 2): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 ```
 
 **5. Refactor: `src/context.ts`** (Replaces `get_context.ts`)
 
 --- ./src/context.ts ---
+
 ```typescript
 import { readdir, stat } from "fs/promises";
 import { join, relative } from "path";
-import { Ignore } from 'ignore';
-import { config } from './config';
-import { readFileContent, isAllowedPath, isAllowedExtension, formatBytes } from './utils';
+import { Ignore } from "ignore";
+import { config } from "./config";
+import {
+  readFileContent,
+  isAllowedPath,
+  isAllowedExtension,
+  formatBytes,
+} from "./utils";
 
 interface FileInfo {
   path: string;
@@ -240,7 +291,10 @@ interface FileInfo {
   size: number;
 }
 
-export async function gatherContext(rootDir: string = ".", ig: Ignore): Promise<{ context: string; files: FileInfo[]; rules: string | null }> {
+export async function gatherContext(
+  rootDir: string = ".",
+  ig: Ignore,
+): Promise<{ context: string; files: FileInfo[]; rules: string | null }> {
   const files: FileInfo[] = [];
   let totalSize = 0;
 
@@ -268,18 +322,25 @@ export async function gatherContext(rootDir: string = ".", ig: Ignore): Promise<
         try {
           const fileStat = await stat(fullPath);
           if (fileStat.size > config.MAX_FILE_SIZE_BYTES) {
-              console.warn(`Skipping ${relativePath}: File size (${formatBytes(fileStat.size)}) exceeds limit (${formatBytes(config.MAX_FILE_SIZE_BYTES)})`);
-              continue;
+            console.warn(
+              `Skipping ${relativePath}: File size (${formatBytes(fileStat.size)}) exceeds limit (${formatBytes(config.MAX_FILE_SIZE_BYTES)})`,
+            );
+            continue;
           }
           if (fileStat.size === 0) {
-              // console.debug(`Skipping ${relativePath}: File is empty`);
-              continue; // Skip empty files
+            // console.debug(`Skipping ${relativePath}: File is empty`);
+            continue; // Skip empty files
           }
 
           const content = await readFileContent(fullPath);
           if (content !== null) {
-            const lines = content.split('\n').length;
-            files.push({ path: relativePath, content, lines, size: fileStat.size });
+            const lines = content.split("\n").length;
+            files.push({
+              path: relativePath,
+              content,
+              lines,
+              size: fileStat.size,
+            });
             totalSize += fileStat.size;
           }
         } catch (e: any) {
@@ -297,7 +358,9 @@ export async function gatherContext(rootDir: string = ".", ig: Ignore): Promise<
 
   const contextBlocks: string[] = [];
   contextBlocks.push(`[START PROJECT CONTEXT]`);
-  contextBlocks.push(`Root Directory: ${rootDir === '.' ? process.cwd() : rootDir}`);
+  contextBlocks.push(
+    `Root Directory: ${rootDir === "." ? process.cwd() : rootDir}`,
+  );
   contextBlocks.push(`Total Files Included: ${files.length}`);
   contextBlocks.push(`Total Size Included: ${formatBytes(totalSize)}`);
   contextBlocks.push(`Timestamp: ${new Date().toISOString()}`);
@@ -310,7 +373,7 @@ File: ${file.path}
 Lines: ${file.lines}
 Size: ${formatBytes(file.size)}
 Content:
-\`\`\`${file.path.split('.').pop()}
+\`\`\`${file.path.split(".").pop()}
 ${file.content}
 \`\`\`
 [END FILE]`);
@@ -330,25 +393,30 @@ ${rules}
 \`\`\`
 [END RULES]`);
   } else {
-    console.log(`No ${config.DAFC_RULES_FILE} found, proceeding without custom rules.`);
+    console.log(
+      `No ${config.DAFC_RULES_FILE} found, proceeding without custom rules.`,
+    );
   }
 
   contextBlocks.push(`[END PROJECT CONTEXT]`);
 
-  console.log(`Context gathered: ${files.length} files, ${formatBytes(totalSize)}.`);
+  console.log(
+    `Context gathered: ${files.length} files, ${formatBytes(totalSize)}.`,
+  );
 
-  return { context: contextBlocks.join('\n\n'), files, rules };
+  return { context: contextBlocks.join("\n\n"), files, rules };
 }
 ```
 
 **6. Refactor: `src/llm.ts`** (Replaces `llm.ts`)
 
 --- ./src/llm.ts ---
+
 ```typescript
 import { writeFile } from "fs/promises";
 import OpenAI from "openai";
-import { config } from './config';
-import { sleep } from './utils';
+import { config } from "./config";
+import { sleep } from "./utils";
 
 const openai = new OpenAI({
   baseURL: config.API_BASE_URL,
@@ -362,9 +430,8 @@ const openai = new OpenAI({
 export async function queryLLM(
   context: string,
   userPrompt: string,
-  systemPrompt: string | null
+  systemPrompt: string | null,
 ): Promise<void> {
-
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
   if (systemPrompt) {
@@ -384,7 +451,7 @@ export async function queryLLM(
       console.log(
         `\nSending request to ${config.MODEL_NAME}${
           attempt > 0 ? ` (attempt ${attempt + 1}/${config.MAX_RETRIES})` : ""
-        }...`
+        }...`,
       );
       const startTime = Date.now();
 
@@ -412,7 +479,6 @@ export async function queryLLM(
       console.log(`   Full response saved to ${config.RESPONSE_FILE}`);
       console.log("-".repeat(40));
       return; // Success - exit the retry loop
-
     } catch (error: any) {
       console.error("\n❌ LLM API Error:");
 
@@ -423,34 +489,41 @@ export async function queryLLM(
 
         if (error.response.status === 401) {
           console.error("\nAuthentication Failed. Please verify:");
-          console.error("1. Your OPENROUTER_API_KEY in .env or environment is correct.");
+          console.error(
+            "1. Your OPENROUTER_API_KEY in .env or environment is correct.",
+          );
           console.error("2. You have sufficient credits on OpenRouter.");
           console.error("3. The model name is correct and available.");
           process.exit(1); // Don't retry auth errors
         }
         if (error.response.status === 402) {
-             console.error("\nPayment Required. Check your OpenRouter credits.");
-             process.exit(1);
+          console.error("\nPayment Required. Check your OpenRouter credits.");
+          process.exit(1);
         }
         if (error.response.status === 429) {
-             console.error("\nRate Limited. Please wait before trying again.");
-             // Exponential backoff will handle retry delay
+          console.error("\nRate Limited. Please wait before trying again.");
+          // Exponential backoff will handle retry delay
         }
-
-      } else if (error.code === 'ENOTFOUND' || error.message.includes("fetch failed")) {
-        console.error("Network error - Could not reach API endpoint. Check connection and API_BASE_URL.");
-      }
-       else {
+      } else if (
+        error.code === "ENOTFOUND" ||
+        error.message.includes("fetch failed")
+      ) {
+        console.error(
+          "Network error - Could not reach API endpoint. Check connection and API_BASE_URL.",
+        );
+      } else {
         console.error(error.message);
       }
 
       attempt++;
       if (attempt >= config.MAX_RETRIES) {
-        console.error(`\nFailed after ${config.MAX_RETRIES} attempts. Exiting.`);
+        console.error(
+          `\nFailed after ${config.MAX_RETRIES} attempts. Exiting.`,
+        );
         process.exit(1);
       }
 
-      const delay = config.BASE_DELAY * Math.pow(2, attempt -1); // Exponential backoff
+      const delay = config.BASE_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
       console.log(`\nRetrying in ${delay / 1000} seconds...`);
       await sleep(delay);
     }
@@ -461,77 +534,86 @@ export async function queryLLM(
 **7. New File: `src/cli.ts`** (Main Entry Point)
 
 --- ./src/cli.ts ---
+
 ```typescript
 #!/usr/bin/env bun
-import { Command } from 'commander';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import { gatherContext } from './context';
-import { queryLLM } from './llm';
-import { createIgnoreFilter, readFileContent } from './utils';
-import { config } from './config';
+import { Command } from "commander";
+import { writeFile } from "fs/promises";
+import { join } from "path";
+import { gatherContext } from "./context";
+import { queryLLM } from "./llm";
+import { createIgnoreFilter, readFileContent } from "./utils";
+import { config } from "./config";
 // Dynamically import package.json to get version
-import pkg from '../package.json';
+import pkg from "../package.json";
 
 const program = new Command();
 
 program
-  .name('dafc')
+  .name("dafc")
   .version(pkg.version)
-  .description('DAFC CLI - Interact with LLMs using your entire codebase as context.');
+  .description(
+    "DAFC CLI - Interact with LLMs using your entire codebase as context.",
+  );
 
 program
-  .command('ask <prompt>')
-  .description('Ask the LLM a question using the current directory\'s context.')
+  .command("ask <prompt>")
+  .description("Ask the LLM a question using the current directory's context.")
   .action(async (prompt: string) => {
-    console.log('DAFC - Dumb as Fuck Coder');
-    console.log('--------------------------');
+    console.log("DAFC - Dumb as Fuck Coder");
+    console.log("--------------------------");
     const rootDir = process.cwd();
     try {
       const ig = await createIgnoreFilter(rootDir);
       const { context, files, rules } = await gatherContext(rootDir, ig);
 
       if (files.length === 0) {
-          console.warn("Warning: No files were included in the context. Check your include patterns and ignore files.");
-          // Optionally exit or proceed with only prompt + rules
+        console.warn(
+          "Warning: No files were included in the context. Check your include patterns and ignore files.",
+        );
+        // Optionally exit or proceed with only prompt + rules
       }
 
       await queryLLM(context, prompt, rules);
     } catch (error: any) {
       console.error(`\n❌ An unexpected error occurred: ${error.message}`);
       if (error.stack) {
-          console.error(error.stack);
+        console.error(error.stack);
       }
       process.exit(1);
     }
   });
 
 program
-  .command('context')
-  .description('Gather context and print it to stdout (what the LLM sees).')
+  .command("context")
+  .description("Gather context and print it to stdout (what the LLM sees).")
   .action(async () => {
-    console.log('Gathering context...');
+    console.log("Gathering context...");
     const rootDir = process.cwd();
-     try {
-        const ig = await createIgnoreFilter(rootDir);
-        const { context, files } = await gatherContext(rootDir, ig);
+    try {
+      const ig = await createIgnoreFilter(rootDir);
+      const { context, files } = await gatherContext(rootDir, ig);
 
-        if (files.length === 0) {
-            console.warn("Warning: No files were included in the context. Check your include patterns and ignore files.");
-        } else {
-            console.log("\n--- START CONTEXT ---");
-            console.log(context);
-            console.log("--- END CONTEXT ---");
-        }
-     } catch (error: any) {
-        console.error(`\n❌ Error gathering context: ${error.message}`);
-        process.exit(1);
-     }
+      if (files.length === 0) {
+        console.warn(
+          "Warning: No files were included in the context. Check your include patterns and ignore files.",
+        );
+      } else {
+        console.log("\n--- START CONTEXT ---");
+        console.log(context);
+        console.log("--- END CONTEXT ---");
+      }
+    } catch (error: any) {
+      console.error(`\n❌ Error gathering context: ${error.message}`);
+      process.exit(1);
+    }
   });
 
 program
-  .command('init')
-  .description('Initialize DAFC config files (.dafcignore, .dafcr) in the current directory.')
+  .command("init")
+  .description(
+    "Initialize DAFC config files (.dafcignore, .dafcr) in the current directory.",
+  )
   .action(async () => {
     const rootDir = process.cwd();
     const dafcignorePath = join(rootDir, config.DAFC_IGNORE_FILE);
@@ -584,23 +666,26 @@ Output the response in Markdown format. For code blocks, specify the language.
       const dafcrExists = await readFileContent(dafcrPath);
 
       if (dafcignoreExists === null) {
-        await writeFile(dafcignorePath, defaultDafcignore, 'utf-8');
+        await writeFile(dafcignorePath, defaultDafcignore, "utf-8");
         console.log(`✅ Created default ${config.DAFC_IGNORE_FILE}`);
       } else {
         console.log(`ℹ️ ${config.DAFC_IGNORE_FILE} already exists, skipping.`);
       }
 
       if (dafcrExists === null) {
-        await writeFile(dafcrPath, defaultDafcr, 'utf-8');
+        await writeFile(dafcrPath, defaultDafcr, "utf-8");
         console.log(`✅ Created default ${config.DAFC_RULES_FILE}`);
       } else {
         console.log(`ℹ️ ${config.DAFC_RULES_FILE} already exists, skipping.`);
       }
 
       console.log("\nInitialization complete. You can customize these files.");
-      console.log(`- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`);
-      console.log(`- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`);
-
+      console.log(
+        `- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`,
+      );
+      console.log(
+        `- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`,
+      );
     } catch (error: any) {
       console.error(`\n❌ Error initializing config files: ${error.message}`);
       process.exit(1);
@@ -610,17 +695,23 @@ Output the response in Markdown format. For code blocks, specify the language.
 // Make 'ask' the default command if no other command is specified
 // This requires checking if args indicate a command or just a prompt
 const args = process.argv.slice(2);
-const knownCommands = program.commands.map(cmd => cmd.name());
+const knownCommands = program.commands.map((cmd) => cmd.name());
 
 // If the first argument is not a known command and not help/version flags, assume it's a prompt for 'ask'
-if (args.length > 0 && !knownCommands.includes(args[0]) && args[0] !== '-h' && args[0] !== '--help' && args[0] !== '-v' && args[0] !== '--version') {
-    // Prepend 'ask' to the arguments to trigger the ask command
-    process.argv.splice(2, 0, 'ask');
+if (
+  args.length > 0 &&
+  !knownCommands.includes(args[0]) &&
+  args[0] !== "-h" &&
+  args[0] !== "--help" &&
+  args[0] !== "-v" &&
+  args[0] !== "--version"
+) {
+  // Prepend 'ask' to the arguments to trigger the ask command
+  process.argv.splice(2, 0, "ask");
 } else if (args.length === 0) {
-    // Show help if no arguments are given
-    process.argv.push('--help');
+  // Show help if no arguments are given
+  process.argv.push("--help");
 }
-
 
 program.parse(process.argv);
 ```
@@ -628,6 +719,7 @@ program.parse(process.argv);
 **8. New File: `install.sh`** (For Linux/macOS)
 
 --- ./install.sh ---
+
 ```bash
 #!/bin/bash
 
@@ -769,18 +861,20 @@ echo ""
 
 exit 0
 ```
-*Action:* Replace `[YOUR_REPO_URL_HERE]` with your actual repository URL. Make this script executable (`chmod +x install.sh`).
+
+_Action:_ Replace `[YOUR_REPO_URL_HERE]` with your actual repository URL. Make this script executable (`chmod +x install.sh`).
 
 **9. New File: `.github/workflows/release.yml`**
 
 --- ./.github/workflows/release.yml ---
+
 ```yaml
 name: Release DAFC CLI
 
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger on version tags like v0.1.0
+      - "v*.*.*" # Trigger on version tags like v0.1.0
 
 jobs:
   build-release:
@@ -862,13 +956,14 @@ jobs:
 Rewrite the README significantly to reflect the new CLI structure, installation, and configuration.
 
 --- ./README.md ---
-```markdown
+
+````markdown
 # DAFC CLI (vX.Y.Z) - Dumb as Fuck Coding Tool
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/[YOUR_USERNAME]/[YOUR_REPO_NAME])](https://github.com/[YOUR_USERNAME]/[YOUR_REPO_NAME]/releases/latest)
 
-**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 2.5 Pro. Instead of complex context management, DAFC lets you easily dump your *entire* (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
+**DAFC** is a command-line tool and a methodology designed to leverage the massive context windows of modern Large Language Models (LLMs) like Gemini 2.5 Pro. Instead of complex context management, DAFC lets you easily dump your _entire_ (but small!) codebase into the LLM prompt for querying, code generation, analysis, and more.
 
 **Read the full philosophy and background in the [introductory blog post](https://avisantoso.com/gemini-and-context-windows).**
 
@@ -878,20 +973,20 @@ Rewrite the README significantly to reflect the new CLI structure, installation,
 
 The "Dumb as Fuck Coding" methodology hinges on keeping projects simple and constrained:
 
-*   **Max ~500 Lines / File:** Keeps individual units manageable.
-*   **Max ~50 Files (Aim for ~10):** Limits overall scope.
-*   **Max ~5 Database Tables (Aim for 3, excluding users):** Simplifies the data model.
+- **Max ~500 Lines / File:** Keeps individual units manageable.
+- **Max ~50 Files (Aim for ~10):** Limits overall scope.
+- **Max ~5 Database Tables (Aim for 3, excluding users):** Simplifies the data model.
 
-By adhering to these rules, the *entire* relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context and interacting with the LLM.
+By adhering to these rules, the _entire_ relevant codebase often fits within the LLM's context window. DAFC CLI automates gathering this context and interacting with the LLM.
 
 ## Features
 
-*   **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `init`).
-*   **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
-*   **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
-*   **LLM Interaction:** Sends context + prompt to an LLM (configured for OpenRouter, defaults to Gemini 2.5 Pro). Includes streaming output and retries.
-*   **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
-*   **Easy Installation:** Shell script for Linux/macOS.
+- **Simple CLI Interface:** Easy-to-use commands (`ask`, `context`, `init`).
+- **Automatic Context Gathering:** Recursively scans your project, respects `.gitignore` and `.dafcignore`, and includes relevant files.
+- **Customizable Rules:** Uses a `.dafcr` file to inject system prompts or specific instructions into the LLM request.
+- **LLM Interaction:** Sends context + prompt to an LLM (configured for OpenRouter, defaults to Gemini 2.5 Pro). Includes streaming output and retries.
+- **Response Handling:** Streams the LLM's response to your console and saves the full response to `response.md`.
+- **Easy Installation:** Shell script for Linux/macOS.
 
 ## Installation
 
@@ -903,7 +998,8 @@ By adhering to these rules, the *entire* relevant codebase often fits within the
     ```bash
     curl -fsSL [RAW_INSTALL_SCRIPT_URL] | bash
     ```
-    *(Replace `[RAW_INSTALL_SCRIPT_URL]` with the raw URL of your `install.sh` file on GitHub, e.g., `https://raw.githubusercontent.com/your-user/your-repo/main/install.sh`)*
+
+    _(Replace `[RAW_INSTALL_SCRIPT_URL]` with the raw URL of your `install.sh` file on GitHub, e.g., `https://raw.githubusercontent.com/your-user/your-repo/main/install.sh`)_
 
 3.  Follow any on-screen instructions, especially regarding adding the installation directory to your PATH if needed.
 4.  Restart your terminal or source your shell profile (`source ~/.bashrc`, `source ~/.zshrc`, etc.).
@@ -939,20 +1035,22 @@ Download the pre-compiled binary for your system from the [Releases Page](https:
 ## Configuration
 
 1.  **API Key (Required):** DAFC needs an OpenRouter API key.
-    *   Get a key from [https://openrouter.ai/keys](https://openrouter.ai/keys).
-    *   Set it as an environment variable. The recommended way is to create a `.env` file in your **project's root directory** (the directory where you run `dafc`):
-        ```dotenv
-        # .env
-        OPENROUTER_API_KEY='your-key-here'
+    - Get a key from [https://openrouter.ai/keys](https://openrouter.ai/keys).
+    - Set it as an environment variable. The recommended way is to create a `.env` file in your **project's root directory** (the directory where you run `dafc`):
 
-        # Optional: Override the default model
-        # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
-        ```
-    *   Alternatively, export it in your shell: `export OPENROUTER_API_KEY='your-key-here'`
+      ```dotenv
+      # .env
+      OPENROUTER_API_KEY='your-key-here'
+
+      # Optional: Override the default model
+      # OPENAI_MODEL='anthropic/claude-3.5-sonnet'
+      ```
+
+    - Alternatively, export it in your shell: `export OPENROUTER_API_KEY='your-key-here'`
 
 2.  **Initialize Project (Optional but Recommended):** Run `dafc init` in your project's root directory. This creates:
-    *   `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
-    *   `.dafcr`: Define custom system prompts or rules for the LLM. Edit this file to tailor the LLM's behavior.
+    - `.dafcignore`: Add file/directory patterns (like `.gitignore`) to exclude from the context sent to the LLM.
+    - `.dafcr`: Define custom system prompts or rules for the LLM. Edit this file to tailor the LLM's behavior.
 
 ## Usage
 
@@ -975,6 +1073,7 @@ dafc "Refactor the main function in cli.ts to be more modular."
 # Get help running the project
 dafc "What are the steps to run this project locally?"
 ```
+````
 
 The LLM response will be streamed to your terminal and saved completely in `response.md`.
 
@@ -997,31 +1096,33 @@ dafc init
 ## How It Works
 
 1.  **`dafc ask "prompt"`:**
-    *   Reads `.gitignore` and `.dafcignore`.
-    *   Scans the current directory recursively for allowed file types.
-    *   Filters out ignored files/directories.
-    *   Reads file contents (skipping very large or empty files).
-    *   Reads rules from `.dafcr` (if it exists).
-    *   Formats file contents and rules into a single context block.
-    *   Sends `[Context Block] + [User Prompt]` to the configured LLM via OpenRouter API.
-    *   Streams the response to `stdout` and saves the full response to `response.md`.
+    - Reads `.gitignore` and `.dafcignore`.
+    - Scans the current directory recursively for allowed file types.
+    - Filters out ignored files/directories.
+    - Reads file contents (skipping very large or empty files).
+    - Reads rules from `.dafcr` (if it exists).
+    - Formats file contents and rules into a single context block.
+    - Sends `[Context Block] + [User Prompt]` to the configured LLM via OpenRouter API.
+    - Streams the response to `stdout` and saves the full response to `response.md`.
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
 
-*(Consider adding more specific contribution guidelines later: coding style, testing requirements, etc.)*
+_(Consider adding more specific contribution guidelines later: coding style, testing requirements, etc.)_
 
 ## Disclaimer
 
 This tool sends your code (excluding ignored files) to external Large Language Models (via OpenRouter).
-*   **Do not use this tool if your codebase contains sensitive information** (secrets, PII, etc.) that should not leave your environment. Standard security practices apply: keep secrets out of your code and use `.gitignore` / `.dafcignore` appropriately. Use a `.env` file for API keys.
-*   Use this tool responsibly and at your own risk. LLM outputs may contain errors or security vulnerabilities – **always review generated code carefully.**
+
+- **Do not use this tool if your codebase contains sensitive information** (secrets, PII, etc.) that should not leave your environment. Standard security practices apply: keep secrets out of your code and use `.gitignore` / `.dafcignore` appropriately. Use a `.env` file for API keys.
+- Use this tool responsibly and at your own risk. LLM outputs may contain errors or security vulnerabilities – **always review generated code carefully.**
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
+
+````
 *Action:* Replace `[YOUR_USERNAME]/[YOUR_REPO_NAME]`, `[YOUR_REPO_URL]`, and `[RAW_INSTALL_SCRIPT_URL]` placeholders. Update the version number (`vX.Y.Z`) as needed.
 
 **11. Final Steps:**
@@ -1044,3 +1145,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 *   Commit changes, push, tag a release (e.g., `git tag v0.1.0`, `git push origin v0.1.0`) to trigger the GitHub Action.
 
 This comprehensive refactoring creates a proper CLI tool, implements the requested features, and sets up a release process. Remember to replace all placeholders with your actual information.
+````

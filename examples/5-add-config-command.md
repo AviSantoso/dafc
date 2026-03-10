@@ -911,6 +911,7 @@ DAFC uses a layered configuration system:
 3.  **Global Config File (Lowest Priority):** A global file stores default settings for all projects. Located at:
     - Linux/macOS: `~/.config/dafc/config.env`
     - Windows: `%APPDATA%\dafc\Config\config.env` (e.g., `C:\Users\YourUser\AppData\Roaming\dafc\Config\config.env`)
+
     ```dotenv
     # ~/.config/dafc/config.env (Example)
     OPENROUTER_API_KEY='your-default-openrouter-key'

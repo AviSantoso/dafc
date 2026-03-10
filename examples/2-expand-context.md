@@ -15,6 +15,7 @@ bun add clipboardy
 Here are the modified files with the new functionality. I'm providing the full content for clarity and easy replacement.
 
 --- ./src/cli.ts ---
+
 ```typescript
 #!/usr/bin/env bun
 import { Command, Option } from "commander";
@@ -34,7 +35,7 @@ program
   .name("dafc")
   .version(pkg.version)
   .description(
-    "DAFC CLI - Interact with LLMs using your entire codebase as context."
+    "DAFC CLI - Interact with LLMs using your entire codebase as context.",
   );
 
 program
@@ -50,7 +51,7 @@ program
 
       if (files.length === 0) {
         console.warn(
-          "Warning: No files were included in the context. Check your include patterns and ignore files."
+          "Warning: No files were included in the context. Check your include patterns and ignore files.",
         );
         // Optionally exit or proceed with only prompt + rules
       }
@@ -71,12 +72,12 @@ program
   .addOption(
     new Option(
       "-s, --save [outputFile]",
-      "Save context to a file (default: context.txt)"
-    ).argParser((value) => value || "context.txt") // Set default if flag exists but no value
+      "Save context to a file (default: context.txt)",
+    ).argParser((value) => value || "context.txt"), // Set default if flag exists but no value
   )
   .option(
     "-w, --watch",
-    "Watch for file changes and update the saved context file (requires --save)"
+    "Watch for file changes and update the saved context file (requires --save)",
   )
   .option("-c, --copy", "Copy the context to the clipboard")
   .action(async (opts: { save?: string; watch?: boolean; copy?: boolean }) => {
@@ -84,7 +85,7 @@ program
     console.log("Gathering context...");
 
     const performGatherAndOutput = async (
-      isInitialRun = true
+      isInitialRun = true,
     ): Promise<string | null> => {
       try {
         const ig = await createIgnoreFilter(rootDir); // Recreate filter in case ignores change
@@ -92,7 +93,7 @@ program
 
         if (files.length === 0 && isInitialRun) {
           console.warn(
-            "Warning: No files were included in the context. Check your include patterns and ignore files."
+            "Warning: No files were included in the context. Check your include patterns and ignore files.",
           );
         }
 
@@ -104,7 +105,7 @@ program
             console.log(`✅ Context saved to ${savePath}`);
           } else {
             console.log(
-              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`
+              `🔄 Context updated in ${savePath} at ${new Date().toLocaleTimeString()}`,
             );
           }
         }
@@ -136,7 +137,7 @@ program
     if (opts.watch) {
       if (!opts.save) {
         console.error(
-          "❌ Error: --watch requires --save to specify an output file."
+          "❌ Error: --watch requires --save to specify an output file.",
         );
         process.exit(1);
       }
@@ -146,7 +147,7 @@ program
 
       const debouncedRegenerate = debounce(
         () => performGatherAndOutput(false),
-        500
+        500,
       ); // Debounce regeneration
 
       try {
@@ -175,7 +176,7 @@ program
 program
   .command("init")
   .description(
-    "Initialize DAFC config files (.dafcignore, .dafcr) in the current directory."
+    "Initialize DAFC config files (.dafcignore, .dafcr) in the current directory.",
   )
   .action(async () => {
     const rootDir = process.cwd();
@@ -247,10 +248,10 @@ Output the response in Markdown format. For code blocks, specify the language.
 
       console.log("\nInitialization complete. You can customize these files.");
       console.log(
-        `- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`
+        `- Edit ${config.DAFC_IGNORE_FILE} to exclude more files/folders from the context.`,
       );
       console.log(
-        `- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`
+        `- Edit ${config.DAFC_RULES_FILE} to provide custom instructions or system prompts to the LLM.`,
       );
     } catch (error: any) {
       console.error(`\n❌ Error initializing config files: ${error.message}`);
@@ -284,6 +285,7 @@ program.parse(process.argv);
 ```
 
 --- ./src/utils.ts ---
+
 ```typescript
 import { readFile } from "fs/promises";
 import { join } from "path";
@@ -295,7 +297,7 @@ export async function sleep(ms: number): Promise<void> {
 }
 
 export async function readFileContent(
-  filePath: string
+  filePath: string,
 ): Promise<string | null> {
   try {
     return await readFile(filePath, "utf-8");
@@ -318,7 +320,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .gitignore
   const gitignoreContent = await readFileContent(
-    join(rootDir, config.GIT_IGNORE_FILE)
+    join(rootDir, config.GIT_IGNORE_FILE),
   );
   if (gitignoreContent) {
     ig.add(gitignoreContent);
@@ -327,7 +329,7 @@ export async function createIgnoreFilter(rootDir: string): Promise<Ignore> {
 
   // Load .dafcignore
   const dafcignoreContent = await readFileContent(
-    join(rootDir, config.DAFC_IGNORE_FILE)
+    join(rootDir, config.DAFC_IGNORE_FILE),
   );
   if (dafcignoreContent) {
     ig.add(dafcignoreContent);
@@ -358,7 +360,7 @@ export function isAllowedExtension(filename: string): boolean {
     return false;
   }
   return config.DEFAULT_INCLUDE_PATTERNS.some((pattern) =>
-    pattern.test(filename)
+    pattern.test(filename),
   );
 }
 
@@ -374,7 +376,7 @@ export function formatBytes(bytes: number, decimals = 2): string {
 // Simple debounce function
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
   return (...args: Parameters<T>) => {
@@ -390,6 +392,7 @@ export function debounce<T extends (...args: any[]) => void>(
 ```
 
 --- ./package.json ---
+
 ```json
 {
   "name": "dafc-cli",
@@ -418,12 +421,7 @@ export function debounce<T extends (...args: any[]) => void>(
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "files": [
-    "dafc",
-    "src/",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dafc", "src/", "LICENSE", "README.md"],
   "keywords": [
     "llm",
     "ai",
@@ -446,14 +444,16 @@ export function debounce<T extends (...args: any[]) => void>(
   "license": "MIT"
 }
 ```
-*(Note: Bumped version to 0.1.1 and added `clipboardy`)*
+
+_(Note: Bumped version to 0.1.1 and added `clipboardy`)_
 
 **3. Update README:**
 
 Add the following section under the `dafc context` description in your `README.md`:
 
 --- ./README.md (Additions) ---
-```md
+
+````md
 **2. View and Manage Context:**
 
 See exactly what context is being gathered and sent to the LLM, save it, copy it, or watch for changes.
@@ -481,13 +481,15 @@ dafc context --save --watch
 # Save context to a specific file and watch for changes
 dafc context --save specific_context.txt --watch
 ```
+````
 
-*   `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.txt`.
-*   `--copy`: Copies the gathered context to the system clipboard.
-*   `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
+- `--save [filename]`: Saves the gathered context to the specified `filename`. If no filename is provided, it defaults to `context.txt`.
+- `--copy`: Copies the gathered context to the system clipboard.
+- `--watch`: Requires `--save`. Monitors the project directory for file changes (respecting ignore rules) and automatically updates the saved context file. Useful for keeping a context file up-to-date while you code. `--copy` is ignored when `--watch` is active.
 
 **3. Initialize Config Files:**
-```
+
+````
 
 *(Rest of the README remains the same)*
 
@@ -497,7 +499,7 @@ After saving the changes, rebuild your CLI tool:
 
 ```bash
 bun run build
-```
+````
 
 If you installed it globally (e.g., in `/usr/local/bin`), you might need to move the newly built `dafc` executable there again (potentially using `sudo`).
 

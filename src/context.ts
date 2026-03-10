@@ -21,7 +21,7 @@ async function readLines(filePath: string): Promise<string[]> {
 
 export async function buildIgnoreFilter(
   cwd: string,
-  ignoreGitignore: boolean
+  ignoreGitignore: boolean,
 ): Promise<(file: string) => boolean> {
   const ig = ignore().add(["node_modules", ".git"]);
 
@@ -39,7 +39,7 @@ export async function buildIgnoreFilter(
 export async function resolveGlobs(
   patterns: string[],
   cwd: string,
-  filter: (file: string) => boolean
+  filter: (file: string) => boolean,
 ): Promise<string[]> {
   const files = await fg(patterns, {
     cwd,
@@ -64,7 +64,7 @@ export function buildTree(files: string[]): string {
 
   function render(
     node: Record<string, unknown>,
-    indent: string = ""
+    indent: string = "",
   ): string[] {
     const lines: string[] = [];
     for (const key of Object.keys(node).sort()) {
@@ -72,7 +72,9 @@ export function buildTree(files: string[]): string {
         lines.push(indent + key);
       } else {
         lines.push(indent + key + "/");
-        lines.push(...render(node[key] as Record<string, unknown>, indent + "  "));
+        lines.push(
+          ...render(node[key] as Record<string, unknown>, indent + "  "),
+        );
       }
     }
     return lines;
@@ -83,7 +85,7 @@ export function buildTree(files: string[]): string {
 
 export async function buildContext(
   files: string[],
-  cwd: string
+  cwd: string,
 ): Promise<string> {
   const tree = buildTree(files);
   const treeIndented = tree
